@@ -1,0 +1,16 @@
+{  "name": "tsm"
+,  "version": "0.0.1"
+,  "author": "Russ Frank <russ.frank@rutgers.edu>"
+,  "description": "A manager for Titanium SDK versions"
+,  "preferGlobal": "true"
+,  "dependencies":
+   {  "flatiron": "0.1.x"
+   ,  "director": "1.0.x"
+   ,  "nconf": "0.5.x"
+   ,  "shelljs": "0.0.x" 
+   ,  "coffee-script": "1.3.x"
+   }
+,  "license": "MIT"
+,  "engine": { "node": ">=0.6" }
+,  "bin": { "tsm": "./exe/tsm" } 
+}

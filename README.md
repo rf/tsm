@@ -5,9 +5,13 @@ Often, it is useful to download the latest versions of the SDK off of
 Appcelerator's build page.  However, this can be tedious; especially for users
 who do not use the Titanium/Apptana studio nonsense.
 
-The utility can be installed via npm:
+The utility requires node; see [this page](https://github.com/joyent/node/wiki/Installation)
+for instructions on how to install node.  You can then install it with npm:
 
-`npm install -g tsm`
+`sudo npm install -g tsm`
+
+Depending on how you installed node, you may or may not need to use sudo. If
+you're using a virtual environment manager such as `nvm` you do not need sudo.
 
 You will now have the `tsm` command available to you.  `tsm` uses `node-semver`
 to make it easier to select versions.  To list all available builds in the

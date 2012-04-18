@@ -29,6 +29,12 @@ To list all available builds:
 tsm ls all
 ```
 
+To list installed builds:
+
+```CLI
+tsm ls installed
+```
+
 You can even specify ranges:
 
 ```CLI

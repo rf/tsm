@@ -10,6 +10,7 @@
    ,  "semver": "1.0.x"
    ,  "d8": "0.2.x"
    ,  "cliff": "0.1.x"
+   ,  "request": "2.9.x"
    }
 ,  "license": "MIT"
 ,  "engine": { "node": ">=0.6" }

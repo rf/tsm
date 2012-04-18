@@ -3,6 +3,7 @@
 ,  "author": "Russ Frank <russ.frank@rutgers.edu>"
 ,  "description": "A manager for Titanium SDK versions"
 ,  "preferGlobal": "true"
+,  "homepage": "http://github.com/russfrank/tsm"
 ,  "dependencies":
    {  "flatiron": "0.1.x"
    ,  "shelljs": "0.0.x" 

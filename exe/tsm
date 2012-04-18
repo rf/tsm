@@ -3,6 +3,7 @@
 require('coffee-script');
 var path = require('path');                                                        
 var fs   = require('fs');                                                          
-var lib  = path.join(path.dirname(fs.realpathSync(__filename)), '../lib');         
+var dirname = path.dirname(fs.realpathSync(__filename));
+var lib  = path.join(dirname, '../lib');         
 
-require(lib + '/command')();    
+require(lib + '/command')(path.join(dirname, '..'));

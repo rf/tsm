@@ -15,6 +15,10 @@ to make it easier to select versions.  To list all available builds in the
 
 `tsm ls 2.1`
 
+To list all available builds:
+
+`tsm ls all`
+
 You can even specify ranges:
 
 `tsm ls '> 2.0 < 2.1'`

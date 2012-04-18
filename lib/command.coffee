@@ -9,8 +9,10 @@ d8 = require 'd8'
 
 app.use flatiron.plugins.cli,
   usage: [
-    'Welcome to my app!'
-    'test'
+    'tsm: Titanium SDK Manager'
+    ''
+    'ls (version)\t\tlist available sdks matching version'
+    'install (version)\tinstall latest sdk matching version'
   ]
 
 app.commands.install = (version, cb) ->
@@ -20,18 +22,15 @@ app.commands.install = (version, cb) ->
       app.log.error util.inspect err
 
 app.commands.list = (type, input, cb) ->
+  if !input
+    input = type
+    type = 'all'
+
   input = String input
+
   switch type
     when 'available', 'all'
       sdk.list app, input, (err, builds) ->
-        list = [['Version', 'Revision','Build Date']]
-        builds.forEach (val) ->
-          git = val.git_revision.slice 0, 7
-
-          list.push [val.version, git, val.date.format("m/d/y g:i:s a")]
-        cliff.putRows 'data', list, ['red', 'blue', 'green']
-    when 'installed'
-      sdk.listInstalled app, input, (err, builds) ->
         list = [['Version', 'Revision','Build Date']]
         builds.forEach (val) ->
           git = val.git_revision.slice 0, 7

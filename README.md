@@ -8,7 +8,9 @@ who do not use the Titanium/Apptana studio nonsense.
 The utility requires node; see [this page](https://github.com/joyent/node/wiki/Installation)
 for instructions on how to install node.  You can then install it with npm:
 
-`sudo npm install -g tsm`
+```CLI
+sudo npm install -g tsm
+```
 
 Depending on how you installed node, you may or may not need to use sudo. If
 you're using a virtual environment manager such as `nvm` you do not need sudo.
@@ -17,26 +19,36 @@ You will now have the `tsm` command available to you.  `tsm` uses `node-semver`
 to make it easier to select versions.  To list all available builds in the
 2.1 release, try
 
-`tsm ls 2.1`
+```CLI
+tsm ls 2.1
+```
 
 To list all available builds:
 
-`tsm ls all`
+```CLI
+tsm ls all
+```
 
 You can even specify ranges:
 
-`tsm ls '> 2.0 < 2.1'`
+```CLI
+tsm ls '> 2.0 < 2.1'
+```
 
 You can also install an sdk version:
 
-`tsm install 2.1`
+```CLI
+tsm install 2.1
+```
 
 This will install the latest build available from the matched versions.
 
 Note that 2.0 is parsed as a float, so if you want to install 2.0, specify it
 like this
 
-`tsm install 2.0.x`
+```CLI
+tsm install 2.0.x
+```
 
 or else you'll get 2.1 instead.
 

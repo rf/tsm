@@ -75,7 +75,7 @@ exports.list = (app, input, cb) ->
           val.zip = "#{zipURL}#{val.git_branch}/#{val.filename}"
           val.githash = val.git_revision.slice 0, 7
 
-          if input == 'null'
+          if !input
             matched.push val
           else if (semver.satisfies version, input) or (gitCheck(input, val.git_revision))
             matched.push val
@@ -150,7 +150,7 @@ exports.installed = (app, input, cb) ->
 
         pairs.date = new Date pairs.timestamp
 
-        if input == 'null'
+        if !input
           matched.push pairs
         else if (semver.satisfies pairs.version, input) or (gitCheck(input, pairs.githash))
           matched.push pairs

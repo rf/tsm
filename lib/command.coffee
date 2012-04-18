@@ -52,12 +52,9 @@ printBuilds = (builds, installed) ->
   cliff.putRows 'data', list, ['red', 'blue', 'yellow', 'green']
 
 # list available or installed sdks
-app.commands.list = (param0, param1, cb) ->
-  if param1
-    type = param0
-    input = String param1
-  else
-    type = param0
+app.commands.list = (type, input, cb) ->
+  input = if !input then false else String(input)
+  if not type then type = 'all'
 
   switch type
     when 'available', 'all'

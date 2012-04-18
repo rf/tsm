@@ -36,7 +36,7 @@ like this
 
 or else you'll get 2.1 instead.
 
-This is currently OSX only; Linux support is coming as well.
+This is currently OSX only; Linux support is in progress.
 
 # License
 

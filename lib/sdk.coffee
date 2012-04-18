@@ -1,6 +1,9 @@
 request = require 'request'
 async = require 'async'
 semver = require 'semver'
+fs = require 'fs'
+path = require 'path'
+require 'shelljs/global'
 
 branchesURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/branches.json'
 branchURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/$BRANCH/index.json'
@@ -71,7 +74,6 @@ exports.list = (app, input, cb) ->
           val.zip = "#{zipURL}#{val.git_branch}/#{val.filename}"
 
           if input == 'null'
-            console.log 'input is null'
             matched.push val
           else if (semver.satisfies version, input) or (gitCheck(input, val.git_revision))
             matched.push val
@@ -84,3 +86,37 @@ exports.list = (app, input, cb) ->
     catch e
       cb e
 
+download = (path, to, cb) ->
+  req = request path
+  req.pipe fs.createWriteStream to
+  req.on 'end', cb
+
+exports.install = (app, input, cb) ->
+  candidates = exports.list app, input, (err, builds) ->
+    if err then return cb err
+
+    # builds are sorted by date, so the last build in the list is the one
+    # we want
+
+    build = builds.pop()
+    dest = path.join (app.config.get 'sdkDir'), 'temp.zip'
+
+    app.log.info "build list retrieved, downloading #{build.filename}"
+
+    download build.zip, dest, (err) ->
+      if err then return cb err
+
+      # now unzip the file by shelling out to unzip, hopefully in the future
+      # I can find a more cross-platform way to do this
+      
+      app.log.info "sdk zip downloaded, unzipping"
+
+      exec(
+        "unzip -oqq '#{dest}' -d '#{app.config.get 'sdkDir'}'",
+        async: true,
+        (code, output) ->
+          if not code == 0 then return cb new Error 'unzip failed'
+
+          rm dest
+          app.log.info "done"
+      )

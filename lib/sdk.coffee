@@ -3,6 +3,7 @@ async = require 'async'
 semver = require 'semver'
 fs = require 'fs'
 path = require 'path'
+_ = require 'underscore'
 require 'shelljs/global'
 
 branchesURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/branches.json'
@@ -72,6 +73,7 @@ exports.list = (app, input, cb) ->
 
           val.date = date
           val.zip = "#{zipURL}#{val.git_branch}/#{val.filename}"
+          val.githash = val.git_revision.slice 0, 7
 
           if input == 'null'
             matched.push val
@@ -99,7 +101,7 @@ exports.install = (app, input, cb) ->
     # we want
 
     build = builds.pop()
-    dest = path.join (app.config.get 'sdkDir'), 'temp.zip'
+    dest = path.join tempdir(), build.filename
 
     app.log.info "build list retrieved, downloading #{build.filename}"
 
@@ -120,3 +122,42 @@ exports.install = (app, input, cb) ->
           rm dest
           app.log.info "done"
       )
+
+# List installed versions
+exports.installed = (app, input, cb) ->
+  dir = path.join(
+    app.config.get 'sdkDir'
+    'mobilesdk'
+    app.config.get 'os'
+  )
+
+  fs.readdir dir, (err, versions) ->
+    if err then return cb err
+    jobs = []
+    matched = []
+    _.each versions, (version) -> jobs.push (jobback) ->
+      sdkDir = path.join dir, version, 'version.txt'
+
+      fs.readFile sdkDir, 'utf8', (err, data) ->
+        if err then return jobback err
+        data = data.split '\n'
+        pairs = _.reduce data, ((memo, item) ->
+          if not item then return memo
+          item = item.split '='
+          memo[item[0]] = item[1]
+          memo
+        ), {}
+
+        pairs.date = new Date pairs.timestamp
+
+        if input == 'null'
+          matched.push pairs
+        else if (semver.satisfies pairs.version, input) or (gitCheck(input, pairs.githash))
+          matched.push pairs
+
+        jobback()
+
+    async.parallel jobs, (err) ->
+      if err then return cb err
+      cb null, matched
+

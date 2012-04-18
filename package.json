@@ -13,6 +13,7 @@
    ,  "cliff": "0.1.x"
    ,  "request": "2.9.x"
    ,  "async": "0.1.x"
+   ,  "colors": "0.6.x"
    }
 ,  "license": "MIT"
 ,  "engine": { "node": ">=0.6" }

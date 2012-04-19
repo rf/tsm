@@ -7,6 +7,7 @@ require 'd8/locale/en-US'
 util = require 'util'
 d8 = require 'd8'
 path = require 'path'
+fs = require 'fs'
 colors = require 'colors'
 _ = require 'underscore'
 
@@ -54,7 +55,7 @@ printBuilds = (builds, installed) ->
 
 # list available or installed sdks
 app.commands.list = (type, input, cb) ->
-  input = if !input then false else String(input)
+  input = if not input then false else String(input)
   if not type then type = 'all'
 
   switch type
@@ -69,6 +70,11 @@ app.commands.list = (type, input, cb) ->
     when 'installed'
       sdk.installed app, input, (err, builds) ->
         printBuilds builds
+
+    # didn't recognize command, call app.commands.list again with 'all' and
+    # assume `type` is actually a version
+    else
+      app.commands.list 'all', type, cb
 
 app.commands.ls = app.commands.list
 
@@ -86,7 +92,7 @@ module.exports = (appDir) ->
 
   else if (process.platform.indexOf 'darwin') != -1
     studiosdkpath = '/Library/Application Support/Titanium/'
-    if (path.existsSync studiosdkpath)
+    if (fs.existsSync studiosdkpath)
       app.config.set 'sdkDir', studiosdkpath
     else
       dir = path.join home, '.titanium'

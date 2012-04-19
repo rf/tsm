@@ -3,6 +3,7 @@ async = require 'async'
 semver = require 'semver'
 fs = require 'fs'
 path = require 'path'
+util = require 'util'
 _ = require 'underscore'
 require 'shelljs/global'
 
@@ -88,10 +89,29 @@ exports.list = (app, input, cb) ->
     catch e
       cb e
 
+# output a pretty progress bar
+progress = (done) ->
+  cols = (process.stdout.getWindowSize()[0] or 70) - 12
+  num = Math.floor(cols * done)
+  str = '['
+  _.times num, -> str += '#'
+  _.times cols - num, -> str += ' '
+  process.stdout.write '\x1b[?25lprogress: ' + str + ']\u000D'
+
 download = (path, to, cb) ->
+  total = 0
+  done = 0
   req = request path
   req.pipe fs.createWriteStream to
-  req.on 'end', cb
+  req.on 'end', ->
+    process.stdout.write '\x1b[?25h\n'
+    cb()
+  req.on 'error', cb
+  req.on 'response', (req) ->
+    done = total = Number req.headers['content-length']
+  req.on 'data', (buffer) ->
+    done -= buffer.length
+    progress 1 - done/total
 
 exports.install = (app, input, cb) ->
   candidates = exports.list app, input, (err, builds) ->
@@ -160,4 +180,3 @@ exports.installed = (app, input, cb) ->
     async.parallel jobs, (err) ->
       if err then return cb err
       cb null, matched
-

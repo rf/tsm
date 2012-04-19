@@ -6,6 +6,7 @@ cliff = require 'cliff'
 require 'd8/locale/en-US'
 util = require 'util'
 d8 = require 'd8'
+path = require 'path'
 colors = require 'colors'
 _ = require 'underscore'
 
@@ -73,8 +74,27 @@ app.commands.ls = app.commands.list
 
 
 # main
-module.exports = (homeDir) ->
-  app.config.set 'homeDir', homeDir
-  app.config.set 'sdkDir', '/Library/Application Support/Titanium/'
+module.exports = (appDir) ->
+  app.config.set 'appDir', appDir
   app.config.set 'os', 'osx'
+
+  home = process.env[if process.platform == 'win32' then 'USERPROFILE' else 'HOME']
+
+  if (process.platform.indexOf 'linux') != -1
+    app.config.set 'os', 'linux'
+    app.config.set 'sdkDir', (path.join home, '.titanium', 'mobilesdk')
+
+  else if (process.platform.indexOf 'darwin') != -1
+    studiosdkpath = '/Library/Application Support/Titanium/'
+    if (path.existsSync studiosdkpath)
+      app.config.set 'sdkDir', studiosdkpath
+    else
+      dir = path.join home, '.titanium'
+      mkdir '-p', (path.join home, '.titanium', 'mobilesdk', 'osx')
+      app.config.set 'sdkDir', dir
+
+  else
+    app.log.error 'Your platform is not yet supported, sorry'
+    return
+
   app.start()

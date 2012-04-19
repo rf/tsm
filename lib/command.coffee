@@ -88,7 +88,9 @@ module.exports = (appDir) ->
 
   if (process.platform.indexOf 'linux') != -1
     app.config.set 'os', 'linux'
-    app.config.set 'sdkDir', (path.join home, '.titanium', 'mobilesdk')
+    dir = path.join home, '.titanium'
+    mkdir '-p', (path.join home, '.titanium', 'mobilesdk', 'linux')
+    app.config.set 'sdkDir', dir
 
   else if (process.platform.indexOf 'darwin') != -1
     studiosdkpath = '/Library/Application Support/Titanium/'

@@ -15,7 +15,7 @@ app.use flatiron.plugins.cli,
   usage: [
     'tsm: Titanium SDK Manager'
     ''
-    'ls (version)\t\tlist available sdks matching version'
+    'ls (all,installed) (version)\t\tlist available sdks matching version'
     'install (version)\tinstall latest sdk matching version'
   ]
 
@@ -38,7 +38,7 @@ printBuilds = (builds, installed) ->
   if installed
     _.each installed, (build) ->
       installedByHash[build.githash] = true
-  list = [['Version', 'Revision','Build Date', 'Installed']]
+  list = [['Version', 'Revision','Build Date', '']]
 
   builds.forEach (val) ->
     # if installed isn't set we're printing already installed versions

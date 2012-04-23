@@ -88,7 +88,15 @@ app.commands.run = (input, cb) ->
       env: process.env
 ###
 
-app.router.on /run (.*)/, -> console.dir arguments
+app.commands.run = () ->
+  cb = [].pop.call arguments
+  version = arguments[0]
+  tiargs = (process.argv.slice 4).join ' '
+  version = String(version)
+
+  sdk.installed app, version, (err, builds) ->
+    if err then return app.log.error err
+    console.log builds.pop().path
 
 # aliases
 app.commands.ls = app.commands.list

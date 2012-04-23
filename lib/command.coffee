@@ -102,6 +102,14 @@ app.commands.run = () ->
 
   sdk.installed app, version, (err, builds) ->
     if err then return app.log.error err
+
+    if builds.length == 0
+      app.log.error """
+        No valid SDK version matching input: #{version}.
+      """
+      app.log.info "usage: tsm run (versio) (args*)"
+      return
+
     path = path.join builds.pop().path, 'titanium.py'
 
     tiargs.unshift path
@@ -113,12 +121,25 @@ app.commands.run = () ->
 app.commands.builder = () ->
   cb = [].pop.call arguments
   version = arguments[0]
-  osname = arguments[1] 
+  osname = arguments[1]
   tiargs = (process.argv.slice 5)
   version = String(version)
 
+  if osname not in ['iphone', 'android']
+    app.log.error "Invalid os: #{osname}"
+    app.log.info "usage: tsm builder (version) (osname) (args*)"
+    return
+
   sdk.installed app, version, (err, builds) ->
     if err then return app.log.error err
+
+    if builds.length == 0
+      app.log.error """
+        No valid SDK version matching input: #{version}.
+      """
+      app.log.info "usage: tsm builder (version) (osname) (args*)"
+      return
+
     path = path.join builds.pop().path, osname, 'builder.py'
 
     tiargs.unshift path

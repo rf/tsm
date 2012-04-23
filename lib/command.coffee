@@ -9,15 +9,21 @@ d8 = require 'd8'
 path = require 'path'
 fs = require 'fs'
 colors = require 'colors'
-exec = (require 'child_process').exec
+spawn = (require 'child_process').spawn
 _ = require 'underscore'
 
 app.use flatiron.plugins.cli,
   usage: [
     'tsm: Titanium SDK Manager'
     ''
-    'ls (all,installed) (version)\t\tlist available sdks matching version'
-    'install (version)\tinstall latest sdk matching version'
+    'ls (all,installed) (version)\tlist available sdks matching version'
+    'install (version)\t\tinstall latest sdk matching version'
+    'run (version)\t\t\trun titanium.py script for version'
+    'builder (version) (os)\t\trun builder.py for os. ex: builder 2 iphone'
+    ''
+    'For run and builder, extra argments are passed straight to the python script.'
+    'Versions are parsed with semver, so you can specify ranges.  If multiple'
+    'versions match, the most recent build is selected.'
   ]
 
 app.commands.install = (version, cb) ->
@@ -91,16 +97,41 @@ app.commands.run = (input, cb) ->
 app.commands.run = () ->
   cb = [].pop.call arguments
   version = arguments[0]
-  tiargs = (process.argv.slice 4).join ' '
+  tiargs = (process.argv.slice 4)
   version = String(version)
 
   sdk.installed app, version, (err, builds) ->
     if err then return app.log.error err
-    console.log builds.pop().path
+    path = path.join builds.pop().path, 'titanium.py'
+
+    tiargs.unshift path
+    child = spawn 'python', tiargs
+
+    child.stdout.on 'data', (data) -> process.stdout.write data
+    child.stderr.on 'data', (data) -> process.stdout.write data
+
+app.commands.builder = () ->
+  cb = [].pop.call arguments
+  version = arguments[0]
+  osname = arguments[1] 
+  tiargs = (process.argv.slice 5)
+  version = String(version)
+
+  sdk.installed app, version, (err, builds) ->
+    if err then return app.log.error err
+    path = path.join builds.pop().path, osname, 'builder.py'
+
+    tiargs.unshift path
+    child = spawn 'python', tiargs
+
+    child.stdout.on 'data', (data) -> process.stdout.write data
+    child.stderr.on 'data', (data) -> process.stdout.write data
 
 # aliases
 app.commands.ls = app.commands.list
 app.commands.i = app.commands.install
+app.commands.r = app.commands.run
+app.commands.b = app.commands.build
 
 # main
 module.exports = (appDir) ->

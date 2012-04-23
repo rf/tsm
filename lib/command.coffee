@@ -8,6 +8,7 @@ util = require 'util'
 d8 = require 'd8'
 path = require 'path'
 colors = require 'colors'
+exec = (require 'child_process').exec
 _ = require 'underscore'
 
 app.use flatiron.plugins.cli,
@@ -70,8 +71,21 @@ app.commands.list = (type, input, cb) ->
       sdk.installed app, input, (err, builds) ->
         printBuilds builds
 
-app.commands.ls = app.commands.list
+###
+app.commands.run = (input, cb) ->
+  input = if !input then false else String(input)
 
+  sdk.installed app, input, (err, builds) ->
+    if err then return app.log.error err
+    exec (path.join builds.pop().path, 'titanium.py'),
+      customFds: [process.stdin, process.stdout, process.stderr]
+      env: process.env
+###
+
+app.router.on /run (.*)/, -> console.dir arguments
+
+app.commands.ls = app.commands.list
+app.commands.i = app.commands.install
 
 # main
 module.exports = (appDir) ->

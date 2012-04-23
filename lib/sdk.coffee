@@ -169,6 +169,7 @@ exports.installed = (app, input, cb) ->
         ), {}
 
         pairs.date = new Date pairs.timestamp
+        pairs.path = path.join dir, version
 
         if !input
           matched.push pairs

@@ -58,6 +58,21 @@ tsm install 2.0.x
 
 or else you'll get 2.1 instead.
 
+Run the `titanium.py` script with `tsm run`:
+
+```shell
+$ tsm run 2.0.x create
+```
+
+Full documentation on the `titanium.py` script is available 
+[here](https://wiki.appcelerator.org/display/guides/Titanium+Command+Line+Interface).
+
+Run the `builder.py` for a particular os with `tsm builder`:
+
+```shell
+$ tsm builder 2.0.x iphone
+```
+
 If you're on osx and you have a `/Library/Application Support/Titanium`
 directory (the place where Titanium Studio puts its sdks) then the installed
 sdks will be dropped there.  

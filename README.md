@@ -58,7 +58,12 @@ tsm install 2.0.x
 
 or else you'll get 2.1 instead.
 
-This is currently OSX only; Linux support is in progress.
+If you're on osx and you have a `/Library/Application Support/Titanium`
+directory (the place where Titanium Studio puts its sdks) then the installed
+sdks will be dropped there.  
+
+If you don't have this folder or you're on linux, the sdks will be installed
+in `~/.titanium/`.
 
 # License
 

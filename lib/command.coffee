@@ -7,6 +7,7 @@ require 'd8/locale/en-US'
 util = require 'util'
 d8 = require 'd8'
 path = require 'path'
+fs = require 'fs'
 colors = require 'colors'
 exec = (require 'child_process').exec
 _ = require 'underscore'
@@ -15,7 +16,7 @@ app.use flatiron.plugins.cli,
   usage: [
     'tsm: Titanium SDK Manager'
     ''
-    'ls (version)\t\tlist available sdks matching version'
+    'ls (all,installed) (version)\t\tlist available sdks matching version'
     'install (version)\tinstall latest sdk matching version'
   ]
 
@@ -38,7 +39,7 @@ printBuilds = (builds, installed) ->
   if installed
     _.each installed, (build) ->
       installedByHash[build.githash] = true
-  list = [['Version', 'Revision','Build Date', 'Installed']]
+  list = [['Version', 'Revision','Build Date', '']]
 
   builds.forEach (val) ->
     # if installed isn't set we're printing already installed versions
@@ -55,7 +56,7 @@ printBuilds = (builds, installed) ->
 
 # list available or installed sdks
 app.commands.list = (type, input, cb) ->
-  input = if !input then false else String(input)
+  input = if not input then false else String(input)
   if not type then type = 'all'
 
   switch type
@@ -71,6 +72,11 @@ app.commands.list = (type, input, cb) ->
       sdk.installed app, input, (err, builds) ->
         printBuilds builds
 
+    # didn't recognize command, call app.commands.list again with 'all' and
+    # assume `type` is actually a version
+    else
+      app.commands.list 'all', type, cb
+
 ###
 app.commands.run = (input, cb) ->
   input = if !input then false else String(input)
@@ -84,6 +90,7 @@ app.commands.run = (input, cb) ->
 
 app.router.on /run (.*)/, -> console.dir arguments
 
+# aliases
 app.commands.ls = app.commands.list
 app.commands.i = app.commands.install
 
@@ -96,11 +103,13 @@ module.exports = (appDir) ->
 
   if (process.platform.indexOf 'linux') != -1
     app.config.set 'os', 'linux'
-    app.config.set 'sdkDir', (path.join home, '.titanium', 'mobilesdk')
+    dir = path.join home, '.titanium'
+    mkdir '-p', (path.join home, '.titanium', 'mobilesdk', 'linux')
+    app.config.set 'sdkDir', dir
 
   else if (process.platform.indexOf 'darwin') != -1
     studiosdkpath = '/Library/Application Support/Titanium/'
-    if (path.existsSync studiosdkpath)
+    if (fs.existsSync studiosdkpath)
       app.config.set 'sdkDir', studiosdkpath
     else
       dir = path.join home, '.titanium'

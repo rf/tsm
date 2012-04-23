@@ -91,12 +91,12 @@ exports.list = (app, input, cb) ->
 
 # output a pretty progress bar
 progress = (done) ->
-  cols = (process.stdout.getWindowSize()[0] or 70) - 12
+  cols = (process.stdout.getWindowSize()[0] or 70) - 2
   num = Math.floor(cols * done)
   str = '['
   _.times num, -> str += '#'
   _.times cols - num, -> str += ' '
-  process.stdout.write '\x1b[?25lprogress: ' + str + ']\u000D'
+  process.stdout.write '\x1b[?25l' + str + ']\u000D'
 
 download = (path, to, cb) ->
   total = 0

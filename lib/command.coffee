@@ -83,21 +83,18 @@ app.commands.list = (type, input, cb) ->
     else
       app.commands.list 'all', type, cb
 
-###
-app.commands.run = (input, cb) ->
-  input = if !input then false else String(input)
-
-  sdk.installed app, input, (err, builds) ->
-    if err then return app.log.error err
-    exec (path.join builds.pop().path, 'titanium.py'),
-      customFds: [process.stdin, process.stdout, process.stderr]
-      env: process.env
-###
-
+# Run the `titanium.py` script for a particular sdk version
 app.commands.run = () ->
+  # callback is always the last arg
   cb = [].pop.call arguments
+
+  # first arg is version
   version = arguments[0]
+
+  # the rest of the args go straight to `titanium.py`
   tiargs = (process.argv.slice 4)
+
+  # version is a buffer object, convert it to string
   version = String(version)
 
   sdk.installed app, version, (err, builds) ->
@@ -115,9 +112,11 @@ app.commands.run = () ->
     tiargs.unshift path
     child = spawn 'python', tiargs
 
-    child.stdout.on 'data', (data) -> process.stdout.write data
-    child.stderr.on 'data', (data) -> process.stdout.write data
+    # pipe stdout and stderr to process.stdout
+    child.stdout.pipe process.stdout
+    child.stderr.pipe process.stderr
 
+# Run the `builder.py` script for a particular SDK version
 app.commands.builder = () ->
   cb = [].pop.call arguments
   version = arguments[0]
@@ -145,8 +144,9 @@ app.commands.builder = () ->
     tiargs.unshift path
     child = spawn 'python', tiargs
 
-    child.stdout.on 'data', (data) -> process.stdout.write data
-    child.stderr.on 'data', (data) -> process.stdout.write data
+    # pipe stdout and stderr to process.stdout
+    child.stdout.pipe process.stdout
+    child.stderr.pipe process.stderr
 
 # aliases
 app.commands.ls = app.commands.list
@@ -177,7 +177,9 @@ module.exports = (appDir) ->
       app.config.set 'sdkDir', dir
 
   else
+    # will need to do actual work for Windows support ..
     app.log.error 'Your platform is not yet supported, sorry'
     return
 
   app.start()
+

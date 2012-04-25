@@ -13,18 +13,7 @@ spawn = (require 'child_process').spawn
 _ = require 'underscore'
 
 app.use flatiron.plugins.cli,
-  usage: [
-    'tsm: Titanium SDK Manager'
-    ''
-    'ls (all,installed) (version)\tlist available sdks matching version'
-    'install (version)\t\tinstall latest sdk matching version'
-    'run (version)\t\t\trun titanium.py script for version'
-    'builder (version) (os)\t\trun builder.py for os. ex: builder 2 iphone'
-    ''
-    'For run and builder, extra argments are passed straight to the python script.'
-    'Versions are parsed with semver, so you can specify ranges.  If multiple'
-    'versions match, the most recent build is selected.'
-  ]
+  usage: require './usage'
 
 app.commands.install = (version, cb) ->
   version = String version

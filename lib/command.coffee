@@ -16,7 +16,10 @@ app.use flatiron.plugins.cli,
   usage: require './usage'
 
 app.commands.install = (version, cb) ->
-  version = String version
+  version = if not version then null else String version
+  if not version
+    app.log.error "You must specify a version like #{'tsm install 2.0.x'.bold}"
+    return cb()
   sdk.install app, version, (err) ->
     if err
       app.log.error util.inspect err
@@ -78,13 +81,14 @@ app.commands.run = () ->
   cb = [].pop.call arguments
 
   # first arg is version
-  version = arguments[0]
+  version = if arguments[0] then String(version) else null
 
   # the rest of the args go straight to `titanium.py`
   tiargs = (process.argv.slice 4)
 
-  # version is a buffer object, convert it to string
-  version = String(version)
+  if not version
+    app.log.error "You must specify a version like #{'tsm run 2.0.x'.bold}"
+    return cb()
 
   sdk.installed app, version, (err, builds) ->
     if err then return app.log.error err
@@ -93,7 +97,7 @@ app.commands.run = () ->
       app.log.error """
         No valid SDK version matching input: #{version}.
       """
-      app.log.info "usage: tsm run (versio) (args*)"
+      app.log.info "usage: tsm run (version) (args*)"
       return
 
     path = path.join builds.pop().path, 'titanium.py'

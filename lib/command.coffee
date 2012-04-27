@@ -81,7 +81,7 @@ app.commands.run = () ->
   cb = [].pop.call arguments
 
   # first arg is version
-  version = if arguments[0] then String(version) else null
+  version = if arguments[0] then String(arguments[0]) else null
 
   # the rest of the args go straight to `titanium.py`
   tiargs = (process.argv.slice 4)

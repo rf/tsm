@@ -1,6 +1,8 @@
 # tsm: Titanium SDK Manager
 
-<img src="http://github.com/russfrank/tsm/master/shot.png">
+*manage installed titanium mobile SDKs with ease*
+
+<img src="https://github.com/russfrank/tsm/raw/master/shot.png">
 
 `tsm` is a small utility which helps you to manage your installed sdk versions.
 Often, it is useful to download the latest versions of the SDK off of

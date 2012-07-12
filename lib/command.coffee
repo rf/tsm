@@ -161,9 +161,12 @@ module.exports = (appDir) ->
     app.config.set 'sdkDir', dir
 
   else if (process.platform.indexOf 'darwin') != -1
-    studiosdkpath = '/Library/Application Support/Titanium/'
-    if (fs.existsSync studiosdkpath)
-      app.config.set 'sdkDir', studiosdkpath
+    studiosdkpath_user = process.env.HOME + '/Library/Application Support/Titanium/'
+    studiosdkpath_global = '/Library/Application Support/Titanium/'
+    if (fs.existsSync studiosdkpath_global)
+      app.config.set 'sdkDir', studiosdkpath_global
+    else if (fs.existsSync studiosdkpath_user)
+      app.config.set 'sdkDir', studiosdkpath_user
     else
       dir = path.join home, '.titanium'
       mkdir '-p', (path.join home, '.titanium', 'mobilesdk', 'osx')

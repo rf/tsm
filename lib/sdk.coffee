@@ -156,10 +156,11 @@ exports.installed = (app, input, cb) ->
     jobs = []
     matched = []
     _.each versions, (version) -> jobs.push (jobback) ->
+
       sdkDir = path.join dir, version, 'version.txt'
 
       fs.readFile sdkDir, 'utf8', (err, data) ->
-        if err then return jobback err
+        if err then return jobback()
         data = data.split '\n'
         pairs = _.reduce data, ((memo, item) ->
           if not item then return memo

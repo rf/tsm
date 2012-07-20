@@ -77,9 +77,10 @@ Run the `builder.py` for a particular os with `tsm builder`:
 $ tsm builder 2.0.x iphone
 ```
 
-If you're on osx and you have a `/Library/Application Support/Titanium`
+If you're on osx and you have a `/Library/Application Support/Titanium` or
+`$HOME/Library/Application Support/Titanium`
 directory (the place where Titanium Studio puts its sdks) then the installed
-sdks will be dropped there.  
+sdks will be dropped there.
 
 If you don't have this folder or you're on linux, the sdks will be installed
 in `~/.titanium/`.

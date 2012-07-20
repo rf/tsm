@@ -147,7 +147,6 @@ exports.install = (app, input, cb) ->
 exports.installed = (app, input, cb) ->
   dir = path.join(
     app.config.get 'sdkDir'
-    'mobilesdk'
     app.config.get 'os'
   )
 

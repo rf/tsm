@@ -1,5 +1,5 @@
 {  "name": "tsm"
-,  "version": "0.0.8"
+,  "version": "0.0.9"
 ,  "author": "Russ Frank <russ.frank@rutgers.edu>"
 ,  "description": "A manager for Titanium SDK versions"
 ,  "preferGlobal": "true"

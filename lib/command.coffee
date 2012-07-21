@@ -156,7 +156,7 @@ module.exports = (appDir) ->
 
   if (process.platform.indexOf 'linux') != -1
     app.config.set 'os', 'linux'
-    dir = path.join home, '.titanium'
+    dir = path.join home, '.titanium', 'mobilesdk'
     mkdir '-p', (path.join home, '.titanium', 'mobilesdk', 'linux')
     app.config.set 'sdkDir', dir
 

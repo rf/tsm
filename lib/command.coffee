@@ -168,7 +168,7 @@ module.exports = (appDir) ->
     else if (fs.existsSync studiosdkpath_user)
       app.config.set 'sdkDir', studiosdkpath_user
     else
-      dir = path.join home, '.titanium'
+      dir = path.join home, '.titanium', 'mobilesdk'
       mkdir '-p', (path.join home, '.titanium', 'mobilesdk', 'osx')
       app.config.set 'sdkDir', dir
 

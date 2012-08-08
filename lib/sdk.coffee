@@ -134,7 +134,7 @@ exports.install = (app, input, cb) ->
       app.log.info "sdk zip downloaded, unzipping"
 
       exec(
-        "unzip -oqq '#{dest}' -d '#{app.config.get 'sdkDir'}'",
+        "unzip -oqq '#{dest}' -d '#{app.config.get 'sdkDir'}/..'",
         async: true,
         (code, output) ->
           if not code == 0 then return cb new Error 'unzip failed'

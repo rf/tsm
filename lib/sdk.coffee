@@ -6,6 +6,7 @@ path = require 'path'
 util = require 'util'
 _ = require 'underscore'
 require 'shelljs/global'
+exec = (require 'child_process').exec
 
 branchesURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/branches.json'
 branchURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/$BRANCH/index.json'
@@ -181,3 +182,10 @@ exports.installed = (app, input, cb) ->
     async.parallel jobs, (err) ->
       if err then return cb err
       cb null, matched
+
+# delete an sdk
+exports.delete = (app, build, cb) ->
+  app.log.info 'removing ' + build.path
+  exec 'rm -r ' + build.path, (err) ->
+    if err then app.log.err err
+    cb()

@@ -1,4 +1,5 @@
 flatiron = require 'flatiron'
+async = require 'async'
 require 'shelljs/global'
 app = flatiron.app
 sdk = require './sdk'
@@ -162,11 +163,44 @@ app.commands.builder = () ->
     child.stdout.pipe process.stdout
     child.stderr.pipe process.stderr
 
+app.commands.delete = () ->
+  args = [].slice.call arguments
+  cb = args.pop()
+  version = args.pop()
+
+  if not version
+    app.log.error "You must specify a version like #{'tsm delete 2.0.x'.bold}"
+    return cb()
+
+  sdk.installed app, version, (err, builds) ->
+    if err then return app.log.error err
+    
+    if builds.length == 0
+      app.log.error """
+        No valid SDK versions matching input: #{version}.
+      """
+
+      app.log.info "usage: tsm builder (version) (osname) (args*)"
+      return
+
+    app.log.info "The following SDKs will be deleted:"
+    printBuilds builds
+
+    app.prompt.get "Are you sure (yes/no)?", (err, data) ->
+      if data['are you sure (yes/no)?'] == 'yes'
+        app.log.info "Ok, deleting #{builds.length} SDKs."
+        jobs = []
+        _.each builds, (build) -> jobs.push (cb) -> sdk.delete app, build, cb
+        async.parallel jobs, cb
+      else
+        app.log.info "Ok, exiting (you must type exactly 'yes')"
+
 # aliases
 app.commands.ls = app.commands.list
 app.commands.i = app.commands.install
 app.commands.r = app.commands.run
 app.commands.b = app.commands.build
+app.commands.d = app.commands.delete
 
 # main
 module.exports = (appDir) ->

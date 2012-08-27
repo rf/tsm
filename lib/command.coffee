@@ -24,33 +24,54 @@ app.commands.install = (version, cb) ->
     if err
       app.log.error util.inspect err
 
+# The list of builds we get from Appcelerator isn't comprehensive; they remove
+# old builds from their system. So we need to take the list we get from appc
+# and the list we get from the user's storage and combine them.
+
+mergeBuilds = (builds, installed) ->
+  installedByHash = {}
+  _.each installed, (build) -> installedByHash[build.githash] = build
+
+  builds = builds.map (build) ->
+    if installedByHash[build.githash] then build.check = "✓".green
+    else build.check = ""
+    delete installedByHash[build.githash]
+    return build
+    
+  # Any builds still in installedByHash aren't in the original list, so we
+  # have to add them in
+
+  _.each installedByHash, (build) ->
+    build.check = "✓".green
+    builds.push build
+
+  # Now we must re-sort the list
+
+  builds.sort (a, b) -> a.date.getTime() - b.date.getTime()
+
+  return builds
+
 # print a list of builds.  If we're printing available builds, we also take
 # the 'installed' parameter which lists what's already installed; in this case,
 # we can put check marks next to installed versions
 
 printBuilds = (builds, installed) ->
-  # setup an object that maps installed versions to true if we're listing
-  # available builds.  This allows us to quickly and easily check if a build
-  # is already installed.
 
-  installedByHash = {}
-  if installed
-    _.each installed, (build) ->
-      installedByHash[build.githash] = true
-  list = [['Version', 'Revision','Build Date', '']]
+  # if a list of installed builds is specified, merge that with the list of
+  # builds. otherwise, we have a list of installed builds, so just merge that
+  # with itself so the green checks are added.
 
-  builds.forEach (val) ->
-    # if installed isn't set we're printing already installed versions
-    # so check all of them
-    if not installed then check = "✓".green
+  builds = mergeBuilds builds, (if installed then installed else builds)
 
-    # otherwise we check to see if each version is installed already --
-    # if so, put a check next to it
-    else if installedByHash[val.githash] then check = "✓".green else check = ""
-    list.push [val.version, val.githash, val.date.format("m/d/y G:i"), check]
+  # setup the list of rows for cliff to print
+
+  builds = builds.map (build) ->
+    [build.version, build.githash, build.date.format("m/d/y G:i"), build.check]
+
+  builds.unshift ['Version', 'Revision', 'Build Date', 'Installed?']
 
   # print the rows with cliff
-  cliff.putRows 'data', list, ['red', 'blue', 'yellow', 'green']
+  cliff.putRows 'data', builds, ['red', 'blue', 'yellow', 'green']
 
 # list available or installed sdks
 app.commands.list = (type, input, cb) ->

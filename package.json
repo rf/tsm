@@ -4,6 +4,9 @@
 ,  "description": "A manager for Titanium SDK versions"
 ,  "preferGlobal": "true"
 ,  "homepage": "http://github.com/russfrank/tsm"
+,  "scripts" : 
+    { "test": "mocha -R spec -u tdd test.js"
+    }
 ,  "dependencies":
    {  "flatiron": "0.1.x"
    ,  "shelljs": "0.0.x" 

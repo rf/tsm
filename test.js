@@ -1,3 +1,20 @@
+var EventEmitter = require("events").EventEmitter;
+
+// simple child process mocking
+var oldspawn = require('child_process').spawn;
+var spawned;
+var spawnerror = false;
+require('child_process').spawn = function (name, args) {
+  spawned = {name: name, args: args};
+  var emitter = new EventEmitter();
+
+  process.nextTick(function () {
+    if (spawnerror) emitter.emit('end', 127);
+    else emitter.emit('exit', 0);
+  });
+  return emitter;
+};
+
 var assert = require("assert");
 var tsm;
 if (process.env.TSM_COV) tsm = require("./lib-cov/index");
@@ -7,6 +24,8 @@ var EventEmitter = require('events').EventEmitter;
 var nock = require('nock');
 var fs = require('fs');
 if (!fs.exists) fs.exists = path.exists;
+var ncp = require('ncp').ncp;
+var rimraf = require('rimraf');
 
 suite('gitCheck', function () {
   var hash0 = "e721f1820f65368794aee29e2da8ebc03de804fd";
@@ -492,11 +511,10 @@ suite('unzip', function () {
 
 suite('install', function () {
   test('functional', function (done) {
-    this.timeout(10000);
     var zip = __dirname + "/fixtures/test.zip";
     var output = __dirname + "/fixtures/2/";
     var zipurl = "/mobile/master/mobilesdk-2.2.0.v20120828153312-osx.zip";
-    var path = __dirname + "/fixtures/2/index.js";
+    var path = __dirname + "/fixtures/2/1.8.2/version.txt";
 
     var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
         .get('/mobile/branches.json')
@@ -506,7 +524,7 @@ suite('install', function () {
         .replyWithFile(200, __dirname + '/fixtures/master-index.json')
 
         .get(zipurl)
-        .replyWithFile(200, __dirname + '/fixtures/test.zip');
+        .replyWithFile(200, __dirname + '/fixtures/sdk.zip');
 
     var emitter = tsm.install({
       output: output,
@@ -525,3 +543,61 @@ suite('install', function () {
     });
   });
 });
+
+suite('delete', function () {
+  test('functional', function (done) {
+    var src = __dirname + "/fixtures/1/";
+    var sdkdir = __dirname + "/fixtures/2";
+    ncp(src, sdkdir, function (err) {
+      if (err) return done(err);
+
+      tsm.remove({dir: sdkdir, input: "1.8.x"}, function (error) {
+        if (error) return done(error);
+
+        fs.exists(sdkdir + "/1.8.2", function (exists) {
+          if (exists) return done(new Error("sdk wasn't deleted"));
+
+          fs.exists(sdkdir + "/2.1.0", function (exists) {
+            if (!exists) return done(new Error("wrong sdk deleted"));
+            rimraf(sdkdir, function () {
+              fs.mkdir(sdkdir, done);
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+suite('builder', function () {
+  test('functional: iphone', function (done) {
+    var sdkdir = __dirname + "/fixtures/1/";
+    var options = {dir: sdkdir, input: '1.8', os: 'iphone', args: ['foo', 'bar']};
+    tsm.builder(options, function (error) {
+      try {
+        assert(spawned.name === "python");
+        assert(spawned.args[0] === "/Users/rfranknj/code/tsm/fixtures/1/1.8.2/iphone/builder.py");
+        assert(spawned.args[1] === "foo");
+        assert(spawned.args[2] === "bar");
+        done();
+      } catch (e) { done(e); }
+    });
+  });
+});
+
+suite('titanium', function () {
+  test('functional', function (done) {
+    var sdkdir = __dirname + "/fixtures/1/";
+    var options = {dir: sdkdir, input: '1.8', args: ['foo', 'bar']};
+    tsm.titanium(options, function (error) {
+      try {
+        assert(spawned.name === "python");
+        assert(spawned.args[0] === "/Users/rfranknj/code/tsm/fixtures/1/1.8.2/titanium.py");
+        assert(spawned.args[1] === "foo");
+        assert(spawned.args[2] === "bar");
+        done();
+      } catch (e) { done(e); }
+    });
+  });
+});
+

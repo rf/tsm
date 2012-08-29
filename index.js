@@ -12,6 +12,152 @@ var path = require("path");
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
+var rimraf = require('rimraf');
+
+var tsm = {};
+module.exports = tsm;
+
+// ## Public API
+
+// ### install
+// * `options` object
+//   * `output` output directory
+//   * `input` git hash or version to match
+//   * `os` os to match, should be 'osx' 'win32' 'linux'
+// * `done` callback, called with `(error)`
+//
+// Installs a matching SDK to the provided directory. Returns an emitter which
+// will emit `progress` events like `{left: 38413, done: 5893, percent: 34}`,
+// `debug` events and `log` events.
+tsm.install = function (options, done) {
+  var emitter = options.emitter || new EventEmitter();
+
+  tsm.getAllBuilds(options.input, options.os, function (error, builds) {
+    if (error) return done(error);
+    if (builds.length === 0) return done(new Error("no matching SDK versions"));
+    var build = builds.pop();
+    var total = build.size;
+    var left = total;
+    var dest = path.join(options.output, build.filename);
+
+    var req = request(build.zip);
+    req.pipe(fs.createWriteStream(dest));
+
+    req.on('error', done);
+
+    req.on('data', function (buffer) { 
+      left -= buffer.length;
+      emitter.emit('progress', {
+        left: left, 
+        done: total - left, 
+        percent: (left / total) * 100
+      });
+    });
+
+    req.on('end', function () {
+      emitter.emit('debug', "complete");
+      emitter.emit('downloaded');
+      tsm.unzip(dest, options.output, function (er) {
+        if (er) return done(er);
+
+        fs.unlink(options.output + "/" + build.filename, function (er) {
+          if (er) return done(er);
+
+          done(null);
+          emitter.emit('done');
+        });
+      });
+    });
+  }, emitter);
+};
+
+// ### remove
+// * `options` object
+//   * `dir` directory to find sdks
+//   * `input` git hash or version to match
+// * `done` callback called with `(error)`
+//
+// Removes sdks matching `input`. Returns an emitter which may emit `debug`
+// and/or `log` events.
+
+tsm.remove = function (options, done) {
+  var emitter = options.emitter || new EventEmitter();
+
+  tsm.findInstalled(options.dir, options.input, function (error, builds) {
+    if (error) return done(error);
+    if (builds.length === 0) return done(new Error('no matched builds'));
+    var dirs = builds.map(function (item) { return item.dir; });
+    async.forEach(dirs, rimraf, done);
+  }, emitter);
+
+  return emitter;
+};
+
+// ### builder
+// * `options` object
+//   * `dir` directory to find sdks
+//   * `input` git hash or version to match
+//   * `os` 'android' or 'iphone'
+//   * `args` array of arguments to pass to builder.py
+//   * `python` string, optional, path of python
+// * `done` callback to call when completed or upon error
+//
+// Runs the builder.py script for the specified `os`.
+
+tsm.builder = function (options, done) {
+  var emitter = options.emitter || new EventEmitter();
+  options.python = options.python || 'python';
+
+  tsm.findInstalled(options.dir, options.input, function (error, builds) {
+    if (error) return done(error);
+    if (builds.length === 0) return done (new Error('no matched builds'));
+    var build = builds.pop();
+
+    var args = [path.join(build.dir, options.os, 'builder.py')];
+    var child = spawn('python', args.concat(options.args || []));
+    emitter.emit('spawned', child);
+
+    child.on('exit', function (code) {
+      done(code === 0? null : new Error("process exited with code: " + code));
+    });
+  }, emitter);
+
+  return emitter;
+};
+
+// ### titanium
+// * `options` object
+//   * `dir` directory to find sdks
+//   * `input` git hash or version to match
+//   * `args` array of arguments to pass to titanium.py
+//   * `python` string, optional, path of python
+// * `done` callback to call when completed or upon error
+//
+// Runs the titanium.py script 
+
+tsm.titanium = function (options, done) {
+  var emitter = options.emitter || new EventEmitter();
+  options.python = options.python || 'python';
+
+  tsm.findInstalled(options.dir, options.input, function (error, builds) {
+    if (error) return done(error);
+    if (builds.length === 0) return done (new Error('no matched builds'));
+    var build = builds.pop();
+
+    var args = [path.join(build.dir, 'titanium.py')];
+    var child = spawn('python', args.concat(options.args || []));
+    emitter.emit('spawned', child);
+
+    child.on('exit', function (code) {
+      done(code === 0? null : new Error("process exited with code: " + code));
+    });
+  }, emitter);
+
+  return emitter;
+};
+
+// ## Helper functions
 
 var branchesURL = 
   'http://builds.appcelerator.com.s3.amazonaws.com/mobile/branches.json';
@@ -20,9 +166,6 @@ var branchURL =
 
 // zipURL needs branch/zipname added to it
 var zipURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/';
-
-var tsm = {};
-module.exports = tsm;
 
 // ### gitCheck
 // * `input` some partial hash
@@ -248,7 +391,8 @@ tsm.findInstalled = function (dir, input, done, emitter) {
           memo.push({
             githash: build.githash,
             version: build.version,
-            date: new Date(build.timestamp)
+            date: new Date(build.timestamp),
+            dir: path.join(dir, version)
           });
         }
 
@@ -362,64 +506,3 @@ tsm.unzip = function (zip, output, done) {
   else
     exec("unzip -oqq '" + zip + "' -d '" + output + "'", done);
 };
-
-// ### install
-// * `output` output directory
-// * `input` git hash or version to match
-// * `os` os to match, should be 'osx' 'win32' 'linux'
-//
-// Installs a matching SDK to the provided directory.
-tsm.install = function (options, done) {
-  var emitter = options.emitter || new EventEmitter();
-
-  tsm.getAllBuilds(options.input, options.os, function (error, builds) {
-    if (error) return done(error);
-    if (builds.length === 0) return done(new Error("no matching SDK versions"));
-    var build = builds.pop();
-    var total = build.size;
-    var left = total;
-    var dest = path.join(options.output, build.filename);
-
-    var req = request(build.zip);
-    req.pipe(fs.createWriteStream(dest));
-
-    req.on('error', done);
-
-    req.on('data', function (buffer) { 
-      left -= buffer.length;
-      emitter.emit('progress', {
-        left: left, 
-        done: total - left, 
-        percent: (left / total) * 100
-      });
-    });
-
-    req.on('end', function () {
-      emitter.emit('debug', "complete");
-      emitter.emit('downloaded');
-      tsm.unzip(dest, options.output, function (er) {
-        if (er) return done(er);
-
-        fs.unlink(options.output + "/" + build.filename, function (er) {
-          if (er) return done(er);
-
-          done(null);
-          emitter.emit('done');
-        });
-      });
-    });
-  }, emitter);
-};
-
-tsm.remove = function (options, done) {
-
-};
-
-tsm.builder = function (options, done) {
-
-};
-
-tsm.titanium = function (options, done) {
-
-};
-

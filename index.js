@@ -1,4 +1,6 @@
-// tsm - Titanium SDK Manager
+// ## tsm
+// Titanium SDK manager
+//
 // This file contains functions for retreiving builds & build metadata from
 // Appcelerator.  Tests are in `test.js`.
 
@@ -20,6 +22,13 @@ var zipURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/';
 
 var tsm = {};
 module.exports = tsm;
+
+// Forward logging events from source to dest
+function forward (source, dest) {
+  source.on('info', function (arg) { dest.emit('info', arg); });
+  source.on('debug', function (arg) { dest.emit('debug', arg); });
+  source.on('warn', function (arg) { dest.emit('warn', arg); });
+}
 
 // ### gitCheck
 // * `input` some partial hash
@@ -151,8 +160,12 @@ tsm.getBuilds = function (branch, done) {
 // Gets all builds matching the input query.  Input can be undefined in which
 // case we return all builds.
 tsm.getAllBuilds = function (input, os, done) {
+  var emitter = new EventEmitter();
+
   tsm.getBranches(function (error, branches) {
     async.reduce(branches, [], function (memo, item, callback) {
+      emitter.emit('debug', "retrieving builds for branch: " + item);
+
       tsm.getBuilds(item, function (error, builds) {
         if (error) callback(error);
         else callback(null, memo.concat(builds));
@@ -169,6 +182,8 @@ tsm.getAllBuilds = function (input, os, done) {
       done(null, result);
     });
   });
+
+  return emitter;
 };
 
 // ### parseVersionFile
@@ -300,19 +315,31 @@ tsm.list = function (options, done) {
   if (options.installed && typeof options.dir != 'string')
     throw new TypeError("options.dir is required for options.installed");
 
+  var emitter = new EventEmitter();
+
   async.parallel({
     installed: function (callback) {
       if (!options.installed) callback(null, []);
-      else tsm.findInstalled(options.dir, options.input, callback);
+      else {
+        emitter.emit('debug', "Finding installed SDKs.");
+        var e = tsm.findInstalled(options.dir, options.input, callback);
+        forward(e, emitter);
+      }
     },
 
     available: function (callback) {
       if (!options.available) callback(null, []);
-      else tsm.getAllBuilds(options.input, options.os, callback);
+      else {
+        emitter.emit('debug', "Pulling available SDKs.");
+        var e = tsm.getAllBuilds(options.input, options.os, callback);
+        forward(e, emitter);
+      }
     }
   }, function (error, data) {
     if (error) done(error);
     else done(null, tsm.mergeBuilds(data.available, data.installed));
   });
+
+  return emitter;
 };
 

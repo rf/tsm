@@ -149,6 +149,7 @@ suite('parseBuildList', function () {
       }
     ];
 
+    // just want to make sure it doesn't throw
     var ret = tsm.parseBuildList(undefined, 'linux', malformed);
   });
 });

@@ -5,7 +5,7 @@
 ,  "preferGlobal": "true"
 ,  "homepage": "http://github.com/russfrank/tsm"
 ,  "scripts" : 
-    { "test": "make test"
+    { "test": "mocha -R spec -u tdd test.js"
     , "coverage": "make coverage"
     }
 ,  "dependencies":

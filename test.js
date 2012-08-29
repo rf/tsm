@@ -1,6 +1,7 @@
 var assert = require("assert");
 var tsm = require("./index");
 var path = require('path');
+var EventEmitter = require('events').EventEmitter;
 
 suite('gitCheck', function () {
   var hash0 = "e721f1820f65368794aee29e2da8ebc03de804fd";
@@ -43,10 +44,6 @@ suite('parseDate', function () {
     assert(date.getDate() === 27, "check day of month");
     assert(date.getHours() === 13, "check hour");
   });
-});
-
-suite('getBuildList', function () {
-
 });
 
 suite('parseBuildList', function () {
@@ -198,15 +195,127 @@ suite('examineDir', function () {
 suite('findInstalled', function () {
   test('functional', function (done) {
     var dir = path.join(__dirname, 'fixtures', '1');
-    tsm.findInstalled(dir, undefined, function (error, builds) {
+    var e = tsm.findInstalled(dir, undefined, function (error, builds) {
       try {
         assert(builds.length === 1, "only 1 result");
 
         assert(builds[0].version === '2.1.0');
         assert(builds[0].githash === 'cde5b27');
+        assert(builds[0].date.getDay, "has a valid date object");
+        done();
+      } catch (e) { done(e); }
+    });
+    assert(e instanceof EventEmitter);
+  });
+});
+
+suite('mergeBuilds', function () {
+  var installed = [
+    { githash: '0a43607',
+      version: '2.1.1',
+      date: new Date("Tue, 17 Jul 2012 02:46:00 GMT") },
+    { githash: 'c63b0d9',
+      version: '2.1.0',
+      date: new Date("Fri, 27 Jul 2012 18:01:00 GMT") },
+    { githash: '61078b0',
+      version: '2.2.0',
+      date: new Date("Fri, 10 Aug 2012 23:41:00 GMT") }
+  ];
+
+  var available = [
+    {
+      "sha1": "2a60ec1e0b693047e6fa9112fe93944c5432a3c3",
+      "build_url": "http://jenkins.appcelerator.org/job/titanium_mobile_master/1277/",
+      "git_revision": "c63b0d947da94e2cdfb3fb06e95106cb803c3f22",
+      "githash": "c63b0d9",
+      "filename": "mobilesdk-2.1.0.v20120827132447-osx.zip",
+      "git_branch": "master",
+      "build_type": "mobile",
+      "date": new Date(),
+      "size": 26961576
+    },
+    {
+      "sha1": "7be939ed222691536b8b32ad0782e4729a9d447c",
+      "build_url": "http://jenkins.appcelerator.org/job/titanium_mobile_master/1278/",
+      "git_revision": "79e9c73d5070fc4306d37bc1cf8cbabb2ad67ae8",
+      "githash": "79e9c73",
+      "filename": "mobilesdk-2.2.0.v20120827143312-osx.zip",
+      "git_branch": "master",
+      "build_type": "mobile",
+      "date": new Date(),
+      "size": 80186079
+    },
+    {
+      "sha1": "a0c6a6cbf334752cf9e2f23be37ee11e63af0a1b",
+      "build_url": "http://jenkins.appcelerator.org/job/titanium_mobile_master/1278/",
+      "git_revision": "39bc239d5070fc4306d37bc1cf8cbabb2ad67ae8",
+      "githash": "39bc239",
+      "filename": "mobilesdk-2.2.0.v20120827143312-osx.zip",
+      "git_branch": "master",
+      "build_type": "mobile",
+      "date": new Date(),
+      "size": 26960385
+    }
+  ];
+
+  test('merges correctly', function () {
+    var merged = tsm.mergeBuilds(available, installed);
+    assert(merged.length === 5);
+
+    // pull out the one that should've been merged
+    var mergedEntry = merged.filter(function (item) { 
+      return item.githash === 'c63b0d9'; 
+    });
+
+    assert(mergedEntry.length === 1);
+    assert(mergedEntry[0].installed === true, "merged entry marked as installed");
+
+    var availableEntry = merged.filter(function (item) {
+      return item.githash === '79e9c73';
+    });
+
+    assert(availableEntry.length === 1);
+    assert(availableEntry[0].installed === false);
+
+    // pull out the one that should've been merged
+    var installedEntry = merged.filter(function (item) { 
+      return item.githash === '61078b0'; 
+    });
+
+    assert(installedEntry.length === 1);
+    assert(installedEntry[0].installed === true);
+  });
+});
+
+suite('list', function () {
+  
+  test('handles missing / malformed os parameter', function () {
+    try {
+      tsm.list({available: true, os: 7}, function (error, data) {});
+    } catch (e) {
+      assert(e instanceof TypeError);
+    }
+
+    try {
+      tsm.list({available: true}, function (error, data) {});
+    } catch (e) {
+      assert(e instanceof TypeError);
+    }
+  });
+
+  test('functional: installed', function () {
+    tsm.list({
+      installed: true, 
+      os: 'osx', 
+      dir: __dirname + "/fixtures/1"
+    }, function (error, data) {
+      try {
+        assert(error === null);
+        assert(data.length === 1);
+        assert(data[0].githash === 'cde5b27');
         done();
       } catch (e) { done(e); }
     });
   });
-});
 
+});

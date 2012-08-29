@@ -5,7 +5,8 @@
 ,  "preferGlobal": "true"
 ,  "homepage": "http://github.com/russfrank/tsm"
 ,  "scripts" : 
-    { "test": "mocha -R spec -u tdd test.js"
+    { "test": "make test"
+    , "coverage": "make coverage"
     }
 ,  "dependencies":
    {  "flatiron": "0.1.x"

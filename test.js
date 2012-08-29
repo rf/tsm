@@ -1,5 +1,7 @@
 var assert = require("assert");
-var tsm = require("./index");
+var tsm;
+if (process.env.TSM_COV) tsm = require("./lib-cov/index");
+else tsm = require('./index');
 var path = require('path');
 var EventEmitter = require('events').EventEmitter;
 

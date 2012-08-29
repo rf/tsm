@@ -489,3 +489,39 @@ suite('unzip', function () {
 
   });
 });
+
+suite('install', function () {
+  test('functional', function (done) {
+    this.timeout(10000);
+    var zip = __dirname + "/fixtures/test.zip";
+    var output = __dirname + "/fixtures/2/";
+    var zipurl = "/mobile/master/mobilesdk-2.2.0.v20120828153312-osx.zip";
+    var path = __dirname + "/fixtures/2/index.js";
+
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/branches.json')
+        .replyWithFile(200, __dirname + "/fixtures/branches-simple.json")
+
+        .get('/mobile/master/index.json')
+        .replyWithFile(200, __dirname + '/fixtures/master-index.json')
+
+        .get(zipurl)
+        .replyWithFile(200, __dirname + '/fixtures/test.zip');
+
+    var emitter = tsm.install({
+      output: output,
+      input: '2',
+      os: 'osx'
+    }, function (error) {
+      try {
+        assert(error === null);
+        scope.done();
+
+        fs.exists(path, function (exists) {
+          if (!exists) done(new Error("file was not extracted properly"));
+          fs.unlink(path, done);
+        });
+      } catch (e) { done(e); }
+    });
+  });
+});

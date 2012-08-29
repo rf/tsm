@@ -324,7 +324,7 @@ tsm.list = function (options, done) {
   if (options.installed && typeof options.dir != 'string')
     throw new TypeError("options.dir is required for options.installed");
 
-  var emitter = new EventEmitter();
+  var emitter = options.emitter || new EventEmitter();
 
   async.parallel({
     installed: function (callback) {
@@ -361,5 +361,65 @@ tsm.unzip = function (zip, output, done) {
     exec("./7za.exe e -y '" + zip + "' -o '" + output + "'", done);
   else
     exec("unzip -oqq '" + zip + "' -d '" + output + "'", done);
+};
+
+// ### install
+// * `output` output directory
+// * `input` git hash or version to match
+// * `os` os to match, should be 'osx' 'win32' 'linux'
+//
+// Installs a matching SDK to the provided directory.
+tsm.install = function (options, done) {
+  var emitter = options.emitter || new EventEmitter();
+
+  tsm.getAllBuilds(options.input, options.os, function (error, builds) {
+    if (error) return done(error);
+    if (builds.length === 0) return done(new Error("no matching SDK versions"));
+    var build = builds.pop();
+    var total = build.size;
+    var left = total;
+    var dest = path.join(options.output, build.filename);
+
+    var req = request(build.zip);
+    req.pipe(fs.createWriteStream(dest));
+
+    req.on('error', done);
+
+    req.on('data', function (buffer) { 
+      left -= buffer.length;
+      emitter.emit('progress', {
+        left: left, 
+        done: total - left, 
+        percent: (left / total) * 100
+      });
+    });
+
+    req.on('end', function () {
+      emitter.emit('debug', "complete");
+      emitter.emit('downloaded');
+      tsm.unzip(dest, options.output, function (er) {
+        if (er) return done(er);
+
+        fs.unlink(options.output + "/" + build.filename, function (er) {
+          if (er) return done(er);
+
+          done(null);
+          emitter.emit('done');
+        });
+      });
+    });
+  }, emitter);
+};
+
+tsm.remove = function (options, done) {
+
+};
+
+tsm.builder = function (options, done) {
+
+};
+
+tsm.titanium = function (options, done) {
+
 };
 

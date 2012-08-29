@@ -101,7 +101,6 @@ tsm.parseBuildList = function (input, os, builds) {
 
     // Shouldn't fail unless they change something..
     if (!item.version || !dateStr) {
-      console.error("couldn't get version / date from " + item.filename);
       return false;
     }
 

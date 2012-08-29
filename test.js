@@ -139,7 +139,10 @@ suite('parseBuildList', function () {
 
 suite('getBuilds', function () {
   test('functional: retrieval of branch master', function (done) {
-    this.timeout(10000);
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/master/index.json')
+        .replyWithFile(200, __dirname + '/fixtures/master-index.json');
+
     tsm.getBuilds('master', function (error, data) {
       try { 
         assert(error === null, "no error");
@@ -187,7 +190,17 @@ suite('getBuilds', function () {
 
 suite('getAllBuilds', function () {
   test('functional', function (done) {
-    this.timeout(10000);
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/branches.json')
+        .replyWithFile(200, __dirname + "/fixtures/branches.json");
+
+    var branches = ["master", "1_4_X", "1_5_X", "1_6_X", "1_7_X", "1_8_X", "2_0_X", "2_1_X"];
+    branches.forEach(function (b) {
+      scope
+        .get('/mobile/'+b+'/index.json')
+        .replyWithFile(200, __dirname + '/fixtures/' + b + '-index.json');
+    });
+
     tsm.getAllBuilds('2.1.x', 'linux', function (error, builds) {
       try {
         if (error) throw error;
@@ -201,6 +214,7 @@ suite('getAllBuilds', function () {
           assert(b.zip, "build has a zip url");
         }
 
+        scope.done();
         done();
       } catch (e) { done(e); }
     });
@@ -387,6 +401,17 @@ suite('list', function () {
   });
 
   test('functional: installed and available, input: 2', function (done) {
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/branches.json')
+        .replyWithFile(200, __dirname + "/fixtures/branches.json");
+
+    var branches = ["master", "1_4_X", "1_5_X", "1_6_X", "1_7_X", "1_8_X", "2_0_X", "2_1_X"];
+    branches.forEach(function (b) {
+      scope
+        .get('/mobile/'+b+'/index.json')
+        .replyWithFile(200, __dirname + '/fixtures/' + b + '-index.json');
+    });
+
     tsm.list({
       installed: true,
       available: true,
@@ -396,7 +421,6 @@ suite('list', function () {
     }, function (error, data) {
       try {
         assert(error === null, "no error");
-        done();
 
         var installed = data.filter(function (item) { 
           return item.installed; 
@@ -408,6 +432,8 @@ suite('list', function () {
           assert(item.githash);
           assert(typeof item.date.getDay === 'function');
         });
+        scope.done();
+        done();
       } catch (e) { done(e); }
     });
   });

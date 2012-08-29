@@ -23,13 +23,6 @@ var zipURL = 'http://builds.appcelerator.com.s3.amazonaws.com/mobile/';
 var tsm = {};
 module.exports = tsm;
 
-// Forward logging events from source to dest
-function forward (source, dest) {
-  source.on('info', function (arg) { dest.emit('info', arg); });
-  source.on('debug', function (arg) { dest.emit('debug', arg); });
-  source.on('warn', function (arg) { dest.emit('warn', arg); });
-}
-
 // ### gitCheck
 // * `input` some partial hash
 // * `revision` some git revision hash
@@ -98,7 +91,7 @@ tsm.parseDate = function (dateStr) {
 //       ...
 //     ]
 
-tsm.parseBuildList = function (input, os, builds) {
+tsm.parseBuildList = function (input, os, builds, emitter) {
   return builds.filter(function (item) { 
     if (os && item.filename.indexOf(os) === -1) return false;
 
@@ -117,6 +110,10 @@ tsm.parseBuildList = function (input, os, builds) {
 
     // Ignore invalid builds. Shouldn't fail unless they change something..
     if (!item.version || !item.date) {
+      if (emitter) emitter.emit(
+        'warn', 
+        "couldn't parse version or date from filename: " + item.filename
+      );
       return false;
     }
 
@@ -159,8 +156,8 @@ tsm.getBuilds = function (branch, done) {
 // * `done` callback function, called with `(error, builds)`
 // Gets all builds matching the input query.  Input can be undefined in which
 // case we return all builds.
-tsm.getAllBuilds = function (input, os, done) {
-  var emitter = new EventEmitter();
+tsm.getAllBuilds = function (input, os, done, emitter) {
+  emitter = emitter || new EventEmitter();
 
   tsm.getBranches(function (error, branches) {
     async.reduce(branches, [], function (memo, item, callback) {
@@ -219,8 +216,8 @@ tsm.examineDir = function (dir, done) {
 // * `done` callback function, called with `(error, builds)`
 // Finds installed versions. Returns an emitter which may emit 'debug' and 'log'
 // events.
-tsm.findInstalled = function (dir, input, done) {
-  var emitter = new EventEmitter();
+tsm.findInstalled = function (dir, input, done, emitter) {
+  emitter = emitter || new EventEmitter();
   fs.readdir(dir, function (error, versions) {
     if (error) return done(error);
     emitter.emit("debug", "examining directories: " + versions.join(','));
@@ -322,8 +319,7 @@ tsm.list = function (options, done) {
       if (!options.installed) callback(null, []);
       else {
         emitter.emit('debug', "Finding installed SDKs.");
-        var e = tsm.findInstalled(options.dir, options.input, callback);
-        forward(e, emitter);
+        tsm.findInstalled(options.dir, options.input, callback, emitter);
       }
     },
 
@@ -331,8 +327,7 @@ tsm.list = function (options, done) {
       if (!options.available) callback(null, []);
       else {
         emitter.emit('debug', "Pulling available SDKs.");
-        var e = tsm.getAllBuilds(options.input, options.os, callback);
-        forward(e, emitter);
+        tsm.getAllBuilds(options.input, options.os, callback, emitter);
       }
     }
   }, function (error, data) {

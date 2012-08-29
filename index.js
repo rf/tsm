@@ -37,6 +37,8 @@ tsm.getBranches = function (done) {
   request(branchesURL, function (error, response, body) {
     try {
       if (error) throw error;
+      if (response.statusCode != 200) 
+        throw new Error("HTTP " + response.statusCode);
 
       var data = JSON.parse(body).branches;
       if (!data) throw new Error("got malformed response from appcelerator");
@@ -126,11 +128,13 @@ tsm.getBuilds = function (branch, done) {
   request(url, function (error, response, body) { 
     try {
       if (error) throw error;
+      if (response.statusCode != 200)
+        throw new Error("got http " + response.statusCode);
       var data = JSON.parse(body);
       done(null, data);
     } 
     
-    catch (e) { done(error); }
+    catch (e) { done(e); }
   });
 };
 
@@ -183,7 +187,7 @@ tsm.examineDir = function (dir, done) {
     if (error) return done(error);
     data = tsm.parseVersionFile(data);
     if (!data.githash || !data.version || !data.timestamp)
-      done(new Error('dir does not appear to contain a valid sdk'));
+      done(new SyntaxError('dir does not appear to contain a valid sdk'));
     else done(null, data);
   });
 };

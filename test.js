@@ -4,6 +4,7 @@ if (process.env.TSM_COV) tsm = require("./lib-cov/index");
 else tsm = require('./index');
 var path = require('path');
 var EventEmitter = require('events').EventEmitter;
+var nock = require('nock');
 
 suite('gitCheck', function () {
   var hash0 = "e721f1820f65368794aee29e2da8ebc03de804fd";
@@ -24,12 +25,33 @@ suite('gitCheck', function () {
 
 suite('getBranches', function () {
   test('functional', function (done) {
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/branches.json')
+        .replyWithFile(200, __dirname + "/fixtures/branches.json");
+
     tsm.getBranches(function (error, data) {
-      assert(error === null);
-      assert(Array.isArray(data));
-      assert(data.indexOf('master') != -1, "master is in branch list");
-      assert(data.indexOf('2_0_X') != -1, "2_0_X is in branch list");
-      done();
+      try {
+        assert(error === null);
+        assert(Array.isArray(data));
+        assert(data.indexOf('master') != -1, "master is in branch list");
+        assert(data.indexOf('2_0_X') != -1, "2_0_X is in branch list");
+        scope.done();
+        done();
+      } catch (e) { done(e); }
+    });
+  });
+
+  test('handles 404', function (done) {
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/branches.json')
+        .reply(404);
+
+    tsm.getBranches(function (error, data) {
+      try {
+        assert(error instanceof Error, "got error");
+        scope.done();
+        done();
+      } catch (e) { done(e); }
     });
   });
 });
@@ -133,6 +155,34 @@ suite('getBuilds', function () {
       } catch (e) { done(e); }
     });
   });
+
+  test('handles 404', function (done) {
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/master/index.json')
+        .reply(404);
+
+    tsm.getBuilds('master', function (error, data) {
+      try {
+        assert(error instanceof Error, "got error");
+        scope.done();
+        done();
+      } catch (e) { done(e); }
+    });
+  });
+
+  test('handles malformed json', function (done) {
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/master/index.json')
+        .reply(200, "}}}[[[[");
+
+    tsm.getBuilds('master', function (error, data) {
+      try {
+        assert(error instanceof SyntaxError, "got error");
+        scope.done();
+        done();
+      } catch (e) { done(e); }
+    });
+  });
 });
 
 suite('getAllBuilds', function () {
@@ -163,16 +213,22 @@ suite('parseVersionFile', function () {
     "timestamp=05/02/12 14:18\n" +
     "githash=cde5b27";
 
-  test('parses correctly', function () {
+  var malformedFile = "======asdf== ==\n\n\nsfoij3===!!!!!!!";
+
+  test('parses', function () {
     var res = tsm.parseVersionFile(file);
     assert(res.version === '2.1.0');
     assert(res.timestamp === '05/02/12 14:18');
     assert(res.githash === 'cde5b27');
   });
+
+  test("doesn't die with invalid input", function () {
+    var res = tsm.parseVersionFile(malformedFile);
+  });
 });
 
 suite('examineDir', function () {
-  test('handles an invalid dir correctly', function (done) {
+  test('handles a dir w/o version.txt', function (done) {
     var dir = path.join(__dirname, 'fixtures', '1', '.DS_Store');
     tsm.examineDir(dir, function (error, data) {
       if (error instanceof Error) done();
@@ -180,7 +236,15 @@ suite('examineDir', function () {
     });
   });
 
-  test('handles a valid dir correctly', function (done) {
+  test('handles dir with malformed version.txt', function (done) {
+    var dir = path.join(__dirname, 'fixtures', '1', 'malformed');
+    tsm.examineDir(dir, function (error, data) {
+      if (error instanceof SyntaxError) done();
+      else done(new Error("expected error"));
+    });
+  });
+
+  test('handles a valid dir', function (done) {
     var dir = path.join(__dirname, 'fixtures', '1', '2.1.0');
     tsm.examineDir(dir, function (error, data) {
       try {
@@ -315,6 +379,8 @@ suite('list', function () {
         assert(error === null);
         assert(data.length === 2);
         assert(data[1].githash === 'cde5b27');
+        assert(data[1].installed === true);
+        assert(data[0].installed === true);
         done();
       } catch (e) { done(e); }
     });
@@ -331,8 +397,33 @@ suite('list', function () {
       try {
         assert(error === null, "no error");
         done();
+
+        var installed = data.filter(function (item) { 
+          return item.installed; 
+        });
+        assert(installed.length > 0, "at least one marked as installed");
+
+        data.forEach(function (item) {
+          assert(item.installed !== undefined);
+          assert(item.githash);
+          assert(typeof item.date.getDay === 'function');
+        });
       } catch (e) { done(e); }
     });
+  });
+
+  test('handles missing / malformed dir argument', function () {
+    try {
+      tsm.list({os: 'osx', installed: true}, function (error, data) {});
+    } catch (e) {
+      assert(e instanceof TypeError);
+    }
+
+    try {
+      tsm.list({os: 'osx', installed: true, dir: 7}, function (error, data) {});
+    } catch (e) {
+      assert(e instanceof TypeError);
+    }
   });
 
 });

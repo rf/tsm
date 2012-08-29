@@ -135,6 +135,22 @@ suite('parseBuildList', function () {
       "correct build matched"
     );
   });
+
+  test('handles malformed filename', function () {
+    var malformed = [
+      {
+        "sha1": "a0c6a6cbf334752cf9e2f23be37ee11e63af0a1b",
+        "build_url": "http://jenkins.appcelerator.org/job/titanium_mobile_master/1278/",
+        "git_revision": "79e9c73d5070fc4306d37bc1cf8cbabb2ad67ae8",
+        "filename": "mobilessdf92jfjlllssssssssssfoooooo312-linux.zip",
+        "git_branch": "master",
+        "build_type": "mobile",
+        "size": 26960385
+      }
+    ];
+
+    var ret = tsm.parseBuildList(undefined, 'linux', malformed);
+  });
 });
 
 suite('getBuilds', function () {
@@ -181,27 +197,6 @@ suite('getBuilds', function () {
     tsm.getBuilds('master', function (error, data) {
       try {
         assert(error instanceof SyntaxError, "expected error");
-        scope.done();
-        done();
-      } catch (e) { done(e); }
-    });
-  });
-
-  test('handles malformed filename', function (done) {
-    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
-        .get('/mobile/master/index.json')
-        .replyWithFile(200, __dirname + "/fixtures/1_4_X-malformed-index.json");
-
-    tsm.getBuilds('master', function (error, data) {
-      try {
-        assert(error === null);
-        assert(Array.isArray(data), "return is an array");
-        assert(data.length > 4, "more than 4 items");
-        data.forEach(function (item) {
-          assert(item.sha1);
-          assert(item.filename);
-          assert(typeof item.size === "number");
-        });
         scope.done();
         done();
       } catch (e) { done(e); }

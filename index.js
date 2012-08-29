@@ -93,14 +93,21 @@ tsm.parseBuildList = function (input, os, builds) {
   return builds.filter(function (item) { 
     if (os && item.filename.indexOf(os) === -1) return false;
 
-    item.version = item.filename.match(/[0-9]*\.[0-9]*\.[0-9]*/)[0];
-    var dateStr = item.filename.match(/[0-9]{14}/)[0];
-    item.date = tsm.parseDate(dateStr);
+    var match;
+
+    // Parse out version from filename (without date on the end)
+    match = item.filename.match(/[0-9]*\.[0-9]*\.[0-9]*/);
+    if (Array.isArray(match)) item.version = match[0];
+
+    // Parse out date from filename 
+    match = item.filename.match(/[0-9]{14}/);
+    if (Array.isArray(match)) item.date = tsm.parseDate(match[0]);
+
     item.zip = zipURL + item.git_branch + "/" + item.filename;
     item.githash = item.git_revision.slice(0, 7);
 
-    // Shouldn't fail unless they change something..
-    if (!item.version || !dateStr) {
+    // Ignore invalid builds. Shouldn't fail unless they change something..
+    if (!item.version || !item.date) {
       return false;
     }
 

@@ -166,7 +166,7 @@ suite('getBuilds', function () {
 
     tsm.getBuilds('master', function (error, data) {
       try {
-        assert(error instanceof Error, "got error");
+        assert(error instanceof Error, "expected error");
         scope.done();
         done();
       } catch (e) { done(e); }
@@ -180,7 +180,28 @@ suite('getBuilds', function () {
 
     tsm.getBuilds('master', function (error, data) {
       try {
-        assert(error instanceof SyntaxError, "got error");
+        assert(error instanceof SyntaxError, "expected error");
+        scope.done();
+        done();
+      } catch (e) { done(e); }
+    });
+  });
+
+  test('handles malformed filename', function (done) {
+    var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
+        .get('/mobile/master/index.json')
+        .replyWithFile(200, __dirname + "/fixtures/1_4_X-malformed-index.json");
+
+    tsm.getBuilds('master', function (error, data) {
+      try {
+        assert(error === null);
+        assert(Array.isArray(data), "return is an array");
+        assert(data.length > 4, "more than 4 items");
+        data.forEach(function (item) {
+          assert(item.sha1);
+          assert(item.filename);
+          assert(typeof item.size === "number");
+        });
         scope.done();
         done();
       } catch (e) { done(e); }

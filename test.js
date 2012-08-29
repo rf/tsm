@@ -474,20 +474,18 @@ suite('list', function () {
 });
 
 suite('unzip', function () {
-
   test('extracts', function (done) {
     var zip = __dirname + "/fixtures/test.zip";
     var output = __dirname + "/fixtures/2/";
     var path = __dirname + "/fixtures/2/index.js";
+
     tsm.unzip(zip, output, function (error) {
       if (error) done(error);
-
       fs.exists(path, function (exists) {
         if (!exists) done(new Error("file was not extracted properly"));
-
         fs.unlink(path, done);
       });
     });
-  });
 
+  });
 });

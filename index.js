@@ -27,6 +27,7 @@ module.exports = tsm;
 // ### gitCheck
 // * `input` some partial hash
 // * `revision` some git revision hash
+//
 // Checks to see if the given input matches the given hash
 tsm.gitCheck = function (input, revision) {
   if (input && input.length > 1 && revision.indexOf(input) === 0) return true;
@@ -35,6 +36,7 @@ tsm.gitCheck = function (input, revision) {
 
 // ### getBranches
 // * `done` callback to be called when complete, passed `(error, data)`
+//
 // Gets a list of branches from Appcelerator, formatted as an array of strings
 tsm.getBranches = function (done) {
   request(branchesURL, function (error, response, body) {
@@ -53,6 +55,7 @@ tsm.getBranches = function (done) {
 
 // ### parseDate
 // * `dateStr` string to parse date out of
+//
 // Parses dates from the strange way Appcelerator chooses to format them.
 // Returns a date object.
 tsm.parseDate = function (dateStr) {
@@ -72,6 +75,7 @@ tsm.parseDate = function (dateStr) {
 // * `input` version or git hash to match against builds, can be falsy
 // * `os` should be 'linux' or 'osx' or 'win32'
 // * `builds` array of builds to parse
+//
 // Parses a build list from appcelerator, matching only those builds we're
 // interested in. Returns a list of builds formatted like:
 
@@ -135,6 +139,7 @@ tsm.parseBuildList = function (input, os, builds, emitter) {
 // ### getBuilds
 // * `branch` branch to get builds for
 // * `done` callback function called with `(error, builds)`
+//
 // Get the list of builds for a particular branch
 tsm.getBuilds = function (branch, done) {
   var url = branchURL.replace('$BRANCH', branch);
@@ -155,6 +160,7 @@ tsm.getBuilds = function (branch, done) {
 // * `input` git hash or version to match
 // * `os` os to match, should be 'linux' or 'osx' or 'win32'
 // * `done` callback function, called with `(error, builds)`
+//
 // Gets all builds matching the input query.  Input can be undefined in which
 // case we return all builds.
 tsm.getAllBuilds = function (input, os, done, emitter) {
@@ -186,6 +192,7 @@ tsm.getAllBuilds = function (input, os, done, emitter) {
 
 // ### parseVersionFile
 // * `data` version file text 
+//
 // Parses the text of a version.txt file and returns it
 tsm.parseVersionFile = function (data) {
   return data.split('\n').reduce(function (memo, item) { 
@@ -199,6 +206,7 @@ tsm.parseVersionFile = function (data) {
 // ### examineDir
 // * `dir` directory to examine
 // * `done` callback called with `(error, data)`
+//
 // Tries to get the version.txt file in a directory.  If it isn't found or it
 // doesn't appear to have the correct properties, an error is returned.
 tsm.examineDir = function (dir, done) {
@@ -215,6 +223,7 @@ tsm.examineDir = function (dir, done) {
 // * `dir` directory to examine
 // * `input` git hash or version to match
 // * `done` callback function, called with `(error, builds)`
+//
 // Finds installed versions. Returns an emitter which may emit 'debug' and 'log'
 // events.
 tsm.findInstalled = function (dir, input, done, emitter) {
@@ -260,6 +269,7 @@ tsm.findInstalled = function (dir, input, done, emitter) {
 // ### mergeBuilds
 // * `available` uninstalled but available builds
 // * `installed` builds assumed to already be on the user's system
+//
 // Merges one list of available builds and one list of installed builds
 tsm.mergeBuilds = function (available, installed) {
 
@@ -304,6 +314,7 @@ tsm.mergeBuilds = function (available, installed) {
 //   * `dir` string, directory to look for installed builds
 //   * `input` string, git hash or version to match
 // * `done` callback called on completion with `(error, builds)`
+//
 // The complete solution for listing builds. Returns an EventEmitter which will
 // emit 'log' and 'debug' events.
 
@@ -343,6 +354,7 @@ tsm.list = function (options, done) {
 // * `zip` zip file to extract
 // * `output` output directory
 // * `done` callback
+//
 // Extracts some zip. Should work on windows and any platform that has unzip.
 tsm.unzip = function (zip, output, done) {
   if (process.platform == 'win32')

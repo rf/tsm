@@ -5,6 +5,8 @@ else tsm = require('./index');
 var path = require('path');
 var EventEmitter = require('events').EventEmitter;
 var nock = require('nock');
+var fs = require('fs');
+if (!fs.exists) fs.exists = path.exists;
 
 suite('gitCheck', function () {
   var hash0 = "e721f1820f65368794aee29e2da8ebc03de804fd";
@@ -467,6 +469,25 @@ suite('list', function () {
     } catch (e) {
       assert(e instanceof TypeError);
     }
+  });
+
+});
+
+suite('unzip', function () {
+
+  test('extracts', function (done) {
+    var zip = __dirname + "/fixtures/test.zip";
+    var output = __dirname + "/fixtures/2/";
+    var path = __dirname + "/fixtures/2/index.js";
+    tsm.unzip(zip, output, function (error) {
+      if (error) done(error);
+
+      fs.exists(path, function (exists) {
+        if (!exists) done(new Error("file was not extracted properly"));
+
+        fs.unlink(path, done);
+      });
+    });
   });
 
 });

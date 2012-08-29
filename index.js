@@ -11,6 +11,7 @@ var fs = require("fs");
 var path = require("path");
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
+var exec = require('child_process').exec;
 
 var branchesURL = 
   'http://builds.appcelerator.com.s3.amazonaws.com/mobile/branches.json';
@@ -336,5 +337,17 @@ tsm.list = function (options, done) {
   });
 
   return emitter;
+};
+
+// ### unzip
+// * `zip` zip file to extract
+// * `output` output directory
+// * `done` callback
+// Extracts some zip. Should work on windows and any platform that has unzip.
+tsm.unzip = function (zip, output, done) {
+  if (process.platform == 'win32')
+    exec("./7za.exe e -y '" + zip + "' -o '" + output + "'", done);
+  else
+    exec("unzip -oqq '" + zip + "' -d '" + output + "'", done);
 };
 

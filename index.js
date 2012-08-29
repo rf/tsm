@@ -94,6 +94,50 @@ tsm.remove = function (options, done) {
   return emitter;
 };
 
+// ### list
+// * `options` object, can have the following properties:
+//   * `os` string *required* os of builds, one of 'osx' 'linux' 'win32'
+//   * `installed` boolean, whether or not to include installed builds
+//   * `available` boolean, whether or not to include uninstalled builds
+//   * `dir` string, directory to look for installed builds
+//   * `input` string, git hash or version to match
+// * `done` callback called on completion with `(error, builds)`
+//
+// The complete solution for listing builds. Returns an EventEmitter which will
+// emit 'log' and 'debug' events.
+
+tsm.list = function (options, done) {
+  if (typeof options.os !== 'string') 
+    throw new TypeError("options.os is required");
+  if (options.installed && typeof options.dir != 'string')
+    throw new TypeError("options.dir is required for options.installed");
+
+  var emitter = options.emitter || new EventEmitter();
+
+  async.parallel({
+    installed: function (callback) {
+      if (!options.installed) callback(null, []);
+      else {
+        emitter.emit('debug', "Finding installed SDKs.");
+        tsm.findInstalled(options.dir, options.input, callback, emitter);
+      }
+    },
+
+    available: function (callback) {
+      if (!options.available) callback(null, []);
+      else {
+        emitter.emit('debug', "Pulling available SDKs.");
+        tsm.getAllBuilds(options.input, options.os, callback, emitter);
+      }
+    }
+  }, function (error, data) {
+    if (error) done(error);
+    else done(null, tsm.mergeBuilds(data.available, data.installed));
+  });
+
+  return emitter;
+};
+
 // ### builder
 // * `options` object
 //   * `dir` directory to find sdks
@@ -448,50 +492,6 @@ tsm.mergeBuilds = function (available, installed) {
   });
 
   return available;
-};
-
-// ### list
-// * `options` object, can have the following properties:
-//   * `os` string *required* os of builds, one of 'osx' 'linux' 'win32'
-//   * `installed` boolean, whether or not to include installed builds
-//   * `available` boolean, whether or not to include uninstalled builds
-//   * `dir` string, directory to look for installed builds
-//   * `input` string, git hash or version to match
-// * `done` callback called on completion with `(error, builds)`
-//
-// The complete solution for listing builds. Returns an EventEmitter which will
-// emit 'log' and 'debug' events.
-
-tsm.list = function (options, done) {
-  if (typeof options.os !== 'string') 
-    throw new TypeError("options.os is required");
-  if (options.installed && typeof options.dir != 'string')
-    throw new TypeError("options.dir is required for options.installed");
-
-  var emitter = options.emitter || new EventEmitter();
-
-  async.parallel({
-    installed: function (callback) {
-      if (!options.installed) callback(null, []);
-      else {
-        emitter.emit('debug', "Finding installed SDKs.");
-        tsm.findInstalled(options.dir, options.input, callback, emitter);
-      }
-    },
-
-    available: function (callback) {
-      if (!options.available) callback(null, []);
-      else {
-        emitter.emit('debug', "Pulling available SDKs.");
-        tsm.getAllBuilds(options.input, options.os, callback, emitter);
-      }
-    }
-  }, function (error, data) {
-    if (error) done(error);
-    else done(null, tsm.mergeBuilds(data.available, data.installed));
-  });
-
-  return emitter;
 };
 
 // ### unzip

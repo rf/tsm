@@ -301,8 +301,8 @@ tsm.list = function (options, done) {
       else tsm.getAllBuilds(options.input, options.os, callback);
     }
   }, function (error, data) {
-    if (error) callback(error);
-    else callback(null, tsm.mergeBuilds(data.available, data.installed));
+    if (error) done(error);
+    else done(null, tsm.mergeBuilds(data.available, data.installed));
   });
 };
 

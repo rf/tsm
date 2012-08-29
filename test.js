@@ -199,11 +199,11 @@ suite('findInstalled', function () {
     var dir = path.join(__dirname, 'fixtures', '1');
     var e = tsm.findInstalled(dir, undefined, function (error, builds) {
       try {
-        assert(builds.length === 1, "only 1 result");
+        assert(builds.length === 2, "2 results");
 
-        assert(builds[0].version === '2.1.0');
-        assert(builds[0].githash === 'cde5b27');
-        assert(builds[0].date.getDay, "has a valid date object");
+        assert(builds[1].version === '2.1.0');
+        assert(builds[1].githash === 'cde5b27');
+        assert(builds[1].date.getDay, "has a valid date object");
         done();
       } catch (e) { done(e); }
     });
@@ -305,7 +305,7 @@ suite('list', function () {
     }
   });
 
-  test('functional: installed', function () {
+  test('functional: installed', function (done) {
     tsm.list({
       installed: true, 
       os: 'osx', 
@@ -313,8 +313,23 @@ suite('list', function () {
     }, function (error, data) {
       try {
         assert(error === null);
-        assert(data.length === 1);
-        assert(data[0].githash === 'cde5b27');
+        assert(data.length === 2);
+        assert(data[1].githash === 'cde5b27');
+        done();
+      } catch (e) { done(e); }
+    });
+  });
+
+  test('functional: installed and available, input: 2', function (done) {
+    tsm.list({
+      installed: true,
+      available: true,
+      os: 'osx',
+      dir: __dirname + "/fixtures/1",
+      input: '2'
+    }, function (error, data) {
+      try {
+        assert(error === null, "no error");
         done();
       } catch (e) { done(e); }
     });

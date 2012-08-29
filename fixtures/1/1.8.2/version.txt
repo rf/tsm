@@ -1,0 +1,4 @@
+version=1.8.2
+module_apiversion=2
+timestamp=03/28/12 17:04
+githash=36d96f1

@@ -1,0 +1,170 @@
+#!/usr/bin/env node
+
+var path = require('path');
+var cliff = require('cliff');
+var args = require('optimist').argv;
+var tsm = require('./index');
+var prompt = require('prompt');
+require('d8/locale/en-US');
+var d8 = require('d8');
+prompt.start();
+
+// Find the sdk path
+var home = process.env.HOME;
+var homePath = process.env.HOME + "/.titanium/mobilesdk";
+var defaultPath;
+
+if (process.platform == 'darwin') {
+  // Try a couple of paths
+  var tries = [];
+  tries.push("/Library/Application Support/Titanium/mobilesdk");
+  tries.push(home + "/Library/Application Support/Titanium/mobilesdk");
+  tries.push(homePath);
+  defaultPath = tries.filter(path.existsSync)[0] || homePath;
+}
+
+else if (process.platform == 'linux') {
+  defaultPath = homePath;
+}
+
+else if (process.platform == 'win32') {
+  defaultPath = "%APPDATA%\\Titanium\\mobilesdk";
+}
+
+var rc = require('rc')('tsm', {
+  path: defaultPath
+});
+
+if (!rc.silent) console.log('Using SDK path: ' + rc.path);
+
+var os = process.platform == "darwin" ? "osx" : process.platform;
+var input, dir = path.join(rc.path, os);
+
+function printBuilds (builds) {
+  builds = builds.map(function (b) {
+    return [
+      b.version, 
+      b.githash, 
+      b.date.format("m/d/y G:i"),
+      b.installed? "✓".green : ""
+    ];
+  });
+
+  builds.unshift(["Version", "Revision", "Build Date", "Installed?"]);
+  cliff.putRows('data', builds, ['red', 'blue', 'yellow', 'green']);
+}
+
+function printBuild (build) {
+  console.log("\nBuild date: ".blue + build.date);
+  console.log("Git hash:   ".blue + build.githash);
+  console.log("Version:    ".blue + build.version);
+  console.log("Path:       ".blue + build.dir);
+}
+
+switch (args._[0]) {
+  case 'ls': case 'l': case 'list':
+    var available;
+    if (args._[1] != "all" && args._[1] != "installed") {
+      input = args._[1];
+      available = true;
+    } else input = args._[2];
+    tsm.list({
+      os: os,
+      installed: true,
+      available: args._[1] == "all" || available,
+      dir: dir,
+      input: input? String(input) : undefined
+    }, function (error, builds) {
+      if (error) console.error(error);
+      else if (builds.length === 0) console.log("No matching builds");
+      else printBuilds(builds);
+    });
+  break;
+  
+  case 'd': case 'del': case 'delete':
+    input = String(args._[1]);
+    tsm.list({
+      os: os, installed: true, dir: dir, input: input
+    }, function (error, builds) {
+      if (error) return console.error(error);
+
+      if (builds.length === 0)
+        return console.log("No matching builds");
+
+      console.log("We will delete the following builds:".red);
+      printBuilds(builds);
+      prompt.get("Are you sure (yes/no)?", function (error, data) {
+        if (data['are you sure (yes/no)?'] === 'yes') {
+          tsm.remove({dir: dir, input: input}, function (error) {
+            if (error) console.error(error);
+            else console.log("Success");
+          });
+        } else {
+          console.log("Okay, exiting.");
+        }
+      });
+    });
+  break;
+
+  case 'r': case 'run':
+    input = String(args._[1]);
+    tsm.titanium({
+      dir: dir,
+      input: input,
+      args: process.argv.slice(process.argv.indexOf(input) + 1),
+      python: rc.python,
+      silent: rc.silent
+    }, function (error) {
+      if (error) {
+        console.error(error.message.red);
+        process.exit(error.code || 1);
+      }
+    });
+  break;
+
+  case 'b': case 'builder': case 'builder.py':
+    input = String(args._[1]);
+    os = String(args._[2]);
+
+    if (!args._[2]) {
+      console.error("you must specify the os, android or iphone");
+      process.exit(1);
+    }
+
+    tsm.builder({
+      dir: dir,
+      input: input,
+      os: os,
+      args: process.argv.slice(process.argv.indexOf(os) + 1),
+      python: rc.python,
+      silent: rc.silent
+    }, function (error) {
+      if (error) {
+        console.error(error.message.red);
+        process.exit(error.code || 1);
+      }
+    });
+  break;
+
+  case 'info':
+    input = String(args._[1]);
+    tsm.list({
+      os: os,
+      installed: true,
+      dir: dir,
+      input: input
+    }, function (error, builds) {
+      if (error) console.error(error);
+      else if (builds.length === 0) console.log("No matching builds");
+      else printBuild(builds.pop());
+    });
+  break;
+
+  default:
+    console.log(require('./usage'));
+  break;
+}
+
+prompt.pause();
+
+// vim: syntax=JavaScript

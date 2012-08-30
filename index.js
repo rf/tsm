@@ -145,6 +145,7 @@ tsm.list = function (options, done) {
 //   * `os` 'android' or 'iphone'
 //   * `args` array of arguments to pass to builder.py
 //   * `python` string, optional, path of python
+//   * `silent` boolean; if true, output will be supressed
 // * `done` callback to call when completed or upon error
 //
 // Runs the builder.py script for the specified `os`.
@@ -163,8 +164,19 @@ tsm.builder = function (options, done) {
     emitter.emit('spawned', child);
 
     child.on('exit', function (code) {
-      done(code === 0? null : new Error("process exited with code: " + code));
+      if (code === 0 || code === 255)
+        done();
+      else {
+        var er = new Error("process exited with code: " + code);
+        er.code = code;
+        done(er);
+      }
     });
+
+    if (!options.silent) {
+      child.stdout.pipe(process.stdout);
+      child.stderr.pipe(process.stderr);
+    }
   }, emitter);
 
   return emitter;
@@ -176,6 +188,7 @@ tsm.builder = function (options, done) {
 //   * `input` git hash or version to match
 //   * `args` array of arguments to pass to titanium.py
 //   * `python` string, optional, path of python
+//   * `silent` boolean; if true, output will be supressed
 // * `done` callback to call when completed or upon error
 //
 // Runs the titanium.py script 
@@ -190,12 +203,25 @@ tsm.titanium = function (options, done) {
     var build = builds.pop();
 
     var args = [path.join(build.dir, 'titanium.py')];
-    var child = spawn('python', args.concat(options.args || []));
+    args = args.concat(options.args || []);
+    emitter.emit('debug', "spawning: python " + args);
+    var child = spawn('python', args);
     emitter.emit('spawned', child);
 
     child.on('exit', function (code) {
-      done(code === 0? null : new Error("process exited with code: " + code));
+      if (code === 0 || code === 255)
+        done();
+      else {
+        var er = new Error("process exited with code: " + code);
+        er.code = code;
+        done(er);
+      }
     });
+
+    if (!options.silent) {
+      child.stdout.pipe(process.stdout);
+      child.stderr.pipe(process.stderr);
+    }
   }, emitter);
 
   return emitter;
@@ -245,6 +271,7 @@ tsm.getBranches = function (done) {
 //
 // Parses dates from the strange way Appcelerator chooses to format them.
 // Returns a date object.
+
 tsm.parseDate = function (dateStr) {
   var date = new Date();
 

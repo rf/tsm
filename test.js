@@ -7,6 +7,8 @@ var spawnerror = false;
 require('child_process').spawn = function (name, args) {
   spawned = {name: name, args: args};
   var emitter = new EventEmitter();
+  emitter.stdout = {pipe: function () {}};
+  emitter.stderr = {pipe: function () {}};
 
   process.nextTick(function () {
     if (spawnerror) emitter.emit('end', 127);

@@ -9,6 +9,7 @@ usage =[
 "",
 "Titanium SDK Manager".blue.bold,
 "http://github.com/russfrank/tsm",
+"Version " + require(__dirname + "/package").version,
 "",
 "Usage:".underline,
 "",
@@ -37,8 +38,8 @@ usage =[
 "",
 "    tsm run <version> <args*>".bold,
 "",
-"    Run the #{'titanium.py'.bold} script bundled with the specified SDK",
-"    version.  args* will be passed to the #{'titanium.py'.bold} script.",
+"    Run the " + "titanium.py".bold + " script bundled with the specified SDK",
+"    version.  args* will be passed to the " + "titanium.py".bold+ " script.",
 "",
 "    tsm builder <version> <os>".bold,
 "",
@@ -46,12 +47,16 @@ usage =[
 "    specified SDK version.  <os> should be one of [iphone, android].",
 "",
 "Versions are parsed with node-semver, so ranges can be specified.  If multiple",
-"versions match, the latest build (sorted by date) will be used.",
+"versions match, the latest build (sorted by date) will be used. Git hash ",
+"partials can also be used to specify a version.",
 "",
-"Git hashes can also be used to specify a version.",
+"Examples:".underline,
 "",
-"If you encounter a bug, please report an issue on the github page.  Thanks for",
-"using tsm."
+"    tsm ls installed 2".bold + "  list installed builds matching 2",
+"    tsm install 2.2".bold + "     install the latest build matching 2.2",
+"    tsm run cde5b27".bold + "     run the titanium.py script for build with hash cde5b27",
+"    tsm info 2.2.1".bold + "      print info about the latest installed build of 2.2.1",
+""
 ].join('\n');
 
 module.exports = usage;

@@ -516,7 +516,7 @@ suite('install', function () {
     var zip = __dirname + "/fixtures/test.zip";
     var output = __dirname + "/fixtures/2/";
     var zipurl = "/mobile/master/mobilesdk-2.2.0.v20120828153312-osx.zip";
-    var path = __dirname + "/fixtures/2/1.8.2/version.txt";
+    var path = __dirname + "/1.8.2/version.txt";
 
     var scope = nock('http://builds.appcelerator.com.s3.amazonaws.com')
         .get('/mobile/branches.json')
@@ -529,7 +529,7 @@ suite('install', function () {
         .replyWithFile(200, __dirname + '/fixtures/sdk.zip');
 
     var emitter = tsm.install({
-      output: output,
+      dir: output,
       input: '2',
       os: 'osx'
     }, function (error) {
@@ -539,7 +539,7 @@ suite('install', function () {
 
         fs.exists(path, function (exists) {
           if (!exists) done(new Error("file was not extracted properly"));
-          fs.unlink(path, done);
+          rimraf(__dirname + "/1.8.2", done);
         });
       } catch (e) { done(e); }
     });

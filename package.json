@@ -1,5 +1,5 @@
 {  "name": "tsm"
-,  "version": "0.0.11"
+,  "version": "1.0.0"
 ,  "author": "Russ Frank <russ.frank@rutgers.edu>"
 ,  "description": "A manager for Titanium SDK versions"
 ,  "preferGlobal": "true"
@@ -9,8 +9,7 @@
     , "coverage": "make coverage"
     }
 ,  "dependencies":
-   {  "flatiron": "0.1.x"
-   ,  "rimraf": "2.0.x"
+   {  "rimraf": "2.0.x"
    ,  "semver": "1.0.x"
    ,  "cliff": "0.1.x"
    ,  "ncp": "0.2.x"

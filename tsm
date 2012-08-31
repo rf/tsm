@@ -146,6 +146,27 @@ switch (args._[0]) {
     });
   break;
 
+  case 'i': case 'install': 
+    input = String(args._[1]);
+
+    var e = tsm.install({
+      dir: dir,
+      os: os,
+      input: input
+    }, function (error) {
+      if (error) console.error(error);
+    });
+
+    e.on('downloaded', function (event) {
+      console.log("Downloaded to " + event.dest.bold);
+      console.log("Extracting to " + event.dir.bold);
+    });
+
+    e.on('extracted', function (event) {
+      console.log("Extracted, deleting " + event.dest.bold);
+    });
+  break;
+
   case 'info':
     input = String(args._[1]);
     tsm.list({

@@ -578,7 +578,7 @@ suite('builder', function () {
     tsm.builder(options, function (error) {
       try {
         assert(spawned.name === "python");
-        assert(spawned.args[0] === "/Users/rfranknj/code/tsm/fixtures/1/1.8.2/iphone/builder.py");
+        assert(spawned.args[0].indexOf("fixtures/1/1.8.2/iphone/builder.py") !== -1);
         assert(spawned.args[1] === "foo");
         assert(spawned.args[2] === "bar");
         done();
@@ -594,7 +594,7 @@ suite('titanium', function () {
     tsm.titanium(options, function (error) {
       try {
         assert(spawned.name === "python");
-        assert(spawned.args[0] === "/Users/rfranknj/code/tsm/fixtures/1/1.8.2/titanium.py");
+        assert(spawned.args[0].indexOf("fixtures/1/1.8.2/titanium.py") !== -1);
         assert(spawned.args[1] === "foo");
         assert(spawned.args[2] === "bar");
         done();

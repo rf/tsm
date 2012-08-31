@@ -465,7 +465,7 @@ tsm.findInstalled = function (dir, input, done, emitter) {
         );
 
         if (!input || (input && satisfied)) {
-          emitter.emit("debug", version + "is satisfied, returning it");
+          emitter.emit("debug", version + " satisfies, returning it");
           memo.push({
             githash: build.githash,
             version: build.version,

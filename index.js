@@ -22,7 +22,7 @@ module.exports = tsm;
 
 // ### install
 // * `options` object
-//   * `output` output directory
+//   * `dir` output directory
 //   * `input` git hash or version to match
 //   * `os` os to match, should be 'osx' 'win32' 'linux'
 // * `done` callback, called with `(error)`
@@ -39,7 +39,7 @@ tsm.install = function (options, done) {
     var build = builds.pop();
     var total = build.size;
     var left = total;
-    var dest = path.join(options.output, build.filename);
+    var dest = path.join(options.dir, build.filename);
 
     var req = request(build.zip);
     req.pipe(fs.createWriteStream(dest));
@@ -56,12 +56,14 @@ tsm.install = function (options, done) {
     });
 
     req.on('end', function () {
+      var dir = path.resolve(options.dir, "..", "..");
       emitter.emit('debug', "complete");
-      emitter.emit('downloaded');
-      tsm.unzip(dest, options.output, function (er) {
+      emitter.emit('downloaded', {dest: dest, dir: dir});
+      tsm.unzip(dest, dir, function (er) {
         if (er) return done(er);
 
-        fs.unlink(options.output + "/" + build.filename, function (er) {
+        emitter.emit('extracted', {dest: dest});
+        fs.unlink(options.dir + "/" + build.filename, function (er) {
           if (er) return done(er);
 
           done(null);
@@ -70,6 +72,8 @@ tsm.install = function (options, done) {
       });
     });
   }, emitter);
+
+  return emitter;
 };
 
 // ### remove

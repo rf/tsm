@@ -61,6 +61,15 @@ function printBuild (build) {
   console.log("Path:       ".blue + build.dir);
 }
 
+var cols = (process.stdout.getWindowSize()[0] || 70) - 2;
+function progress (percent) {
+  var num = Math.floor(cols * percent);
+  var str = '[' +
+    (new Array(num + 1).join('#')) +
+    (new Array((cols - num) + 1).join(' '));
+  process.stdout.write('\x1b[?25l' + str + ']\u000D');
+}
+
 switch (args._[0]) {
   case 'ls': case 'l': case 'list':
     var available;
@@ -154,17 +163,31 @@ switch (args._[0]) {
       os: os,
       input: input
     }, function (error) {
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        process.exit(1);
+      }
     });
 
-    e.on('downloaded', function (event) {
-      console.log("Downloaded to " + event.dest.bold);
-      console.log("Extracting to " + event.dir.bold);
-    });
+    if (!rc.silent) {
+      e.on('chose', function (build) {
+        console.log("Downloading " + build.zip.bold);
+      });
 
-    e.on('extracted', function (event) {
-      console.log("Extracted, deleting " + event.dest.bold);
-    });
+      e.on('progress', function (event) {
+        progress(event.percent);
+      });
+
+      e.on('downloaded', function (event) {
+        process.stdout.write('\x1b[?25h\n');
+        console.log("Downloaded to " + event.dest.bold);
+        console.log("Extracting to " + event.dir.bold);
+      });
+
+      e.on('extracted', function (event) {
+        console.log("Extracted, deleting " + event.dest.bold);
+      });
+    }
   break;
 
   case 'info':

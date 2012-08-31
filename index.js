@@ -28,7 +28,7 @@ module.exports = tsm;
 // * `done` callback, called with `(error)`
 //
 // Installs a matching SDK to the provided directory. Returns an emitter which
-// will emit `progress` events like `{left: 38413, done: 5893, percent: 34}`,
+// will emit `progress` events like `{left: 38413, done: 5893, percent: 0.34}`,
 // `debug` events and `log` events.
 tsm.install = function (options, done) {
   var emitter = options.emitter || new EventEmitter();
@@ -41,6 +41,8 @@ tsm.install = function (options, done) {
     var left = total;
     var dest = path.join(options.dir, build.filename);
 
+    emitter.emit('chose', build);
+
     var req = request(build.zip);
     req.pipe(fs.createWriteStream(dest));
 
@@ -51,7 +53,7 @@ tsm.install = function (options, done) {
       emitter.emit('progress', {
         left: left, 
         done: total - left, 
-        percent: (left / total) * 100
+        percent: (total-left) / total
       });
     });
 
@@ -131,6 +133,7 @@ tsm.list = function (options, done) {
       if (!options.available) callback(null, []);
       else {
         emitter.emit('debug', "Pulling available SDKs.");
+        emitter.emit('available', options);
         tsm.getAllBuilds(options.input, options.os, callback, emitter);
       }
     }

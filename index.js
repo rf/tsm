@@ -94,7 +94,10 @@ tsm.remove = function (options, done) {
     if (error) return done(error);
     if (builds.length === 0) return done(new Error('no matched builds'));
     var dirs = builds.map(function (item) { return item.dir; });
-    async.forEach(dirs, rimraf, done);
+    async.forEach(dirs, function (item, callback) {
+      emitter.emit('deleting', item);
+      rimraf(item, callback);
+    }, done);
   }, emitter);
 
   return emitter;

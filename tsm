@@ -104,7 +104,7 @@ switch (args._[0]) {
       printBuilds(builds);
       prompt.get("Are you sure (yes/no)?", function (error, data) {
         if (data['are you sure (yes/no)?'] === 'yes') {
-          tsm.remove({dir: dir, input: input}, function (error) {
+          tsm.remove({dir: dir, input: input, emitter: emitter}, function (error) {
             if (error) console.error(error);
             else console.log("Success");
           });
@@ -113,6 +113,12 @@ switch (args._[0]) {
         }
       });
     });
+
+    if (!rc.silent) {
+      emitter.on('deleting', function (dir) {
+        console.log("Deleting: " + dir.bold);
+      });
+    }
   break;
 
   case 'r': case 'run':
@@ -164,7 +170,7 @@ switch (args._[0]) {
       input: input
     }, function (error) {
       if (error) {
-        console.error(error);
+        console.error(error.message);
         process.exit(1);
       }
     });

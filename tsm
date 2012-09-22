@@ -13,6 +13,7 @@ var fs = require('fs');
 prompt.start();
 
 if (!fs.existsSync) fs.existsSync = path.existsSync;
+if (!path.sep) path.sep = process.platform === 'win32'? '\\': '/';
 
 // Find the sdk path
 var home = process.env.HOME;

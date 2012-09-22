@@ -94,6 +94,12 @@ sdks will be dropped there.
 If you don't have this folder or you're on linux, the sdks will be installed
 in `~/.titanium/`.
 
+# API
+
+`tsm` has a very high level api which can be used to gather information about
+builds or install builds.  You can find the full annotated source
+[here](http://russfrank.us/static/tsm/).
+
 # Windows Support
 
 `tsm` runs on windows as of version 1.0.0. If you have python in your path,

@@ -421,6 +421,8 @@ tsm.getAllBuilds = function (input, os, done, emitter) {
 tsm.parseVersionFile = function (data) {
   return data.split('\n').reduce(function (memo, item) { 
     if (!item) return memo;
+    // remove /r characters which may be present on windows
+    item = item.replace(/\r/g, '');
     item = item.split('=');
     memo[item[0]] = item[1];
     return memo;
@@ -533,7 +535,6 @@ tsm.mergeBuilds = function (available, installed) {
 
 var oldexec = exec;
 exec = function (what, callback) {
-   console.log('executing ' + what);
    oldexec(what, callback);
 };
 

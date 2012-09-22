@@ -29,6 +29,13 @@ if (!fs.exists) fs.exists = path.exists;
 var ncp = require('ncp').ncp;
 var rimraf = require('rimraf');
 
+function assertInPath (expected, actual) {
+  // fix slashes in path for windows
+  if (process.platform === 'win32')
+    expected = expected.split('/').join('\\');
+  assert(actual.indexOf(expected) != -1, "correct path");
+}
+
 suite('gitCheck', function () {
   var hash0 = "e721f1820f65368794aee29e2da8ebc03de804fd";
   var hash1 = "e2a219dceb3026e73be3afab4591aa3ba627d58b";
@@ -578,7 +585,7 @@ suite('builder', function () {
     tsm.builder(options, function (error) {
       try {
         assert(spawned.name === "python");
-        assert(spawned.args[0].indexOf("fixtures/1/1.8.2/iphone/builder.py") !== -1);
+        assertInPath("fixtures/1/1.8.2/iphone/builder.py", spawned.args[0]);
         assert(spawned.args[1] === "foo");
         assert(spawned.args[2] === "bar");
         done();
@@ -594,7 +601,7 @@ suite('titanium', function () {
     tsm.titanium(options, function (error) {
       try {
         assert(spawned.name === "python");
-        assert(spawned.args[0].indexOf("fixtures/1/1.8.2/titanium.py") !== -1);
+        assertInPath("fixtures/1/1.8.2/titanium.py", spawned.args[0]);
         assert(spawned.args[1] === "foo");
         assert(spawned.args[2] === "bar");
         done();

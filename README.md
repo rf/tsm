@@ -13,7 +13,7 @@ The utility requires node; see [this page](https://github.com/joyent/node/wiki/I
 for instructions on how to install node.  You can then install it with npm:
 
 ```CLI
-sudo npm install -g tsm
+$ sudo npm install -g tsm
 ```
 
 Depending on how you installed node, you may or may not need to use sudo. If
@@ -24,40 +24,49 @@ to make it easier to select versions.  To list all available builds in the
 2.1 release, try
 
 ```CLI
-tsm ls 2.1
+$ tsm ls 2.1
 ```
 
 To list all available builds:
 
 ```CLI
-tsm ls all
+$ tsm ls all
 ```
 
 To list installed builds:
 
 ```CLI
-tsm ls installed
+$ tsm ls installed
 ```
 
 You can even specify ranges:
 
 ```CLI
-tsm ls '> 2.0 < 2.1'
+$ tsm ls '> 2.0 < 2.1'
 ```
 
 You can also install an sdk version:
 
 ```CLI
-tsm install 2.1
+$ tsm install 2.1
 ```
 
 This will install the latest build available from the matched versions.
+
+You can also delete versions:
+
+```CLI
+$ tsm delete 1
+```
+
+This will delete all version 1.x.x builds. It will prompt for confirmation
+first.
 
 Note that 2.0 is parsed as a float, so if you want to install 2.0, specify it
 like this
 
 ```CLI
-tsm install 2.0.x
+$ tsm install 2.0.x
 ```
 
 or else you'll get 2.1 instead.
@@ -84,6 +93,11 @@ sdks will be dropped there.
 
 If you don't have this folder or you're on linux, the sdks will be installed
 in `~/.titanium/`.
+
+# Windows Support
+
+`tsm` runs on windows as of version 1.0.0. If you have python in your path,
+it can also run the Titanium scripts.
 
 # License
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+var charm = require('charm')();
+charm.pipe(process.stdout);
 var path = require('path');
 var cliff = require('cliff');
 var args = require('optimist').argv;
@@ -74,13 +76,14 @@ function printBuild (build) {
   console.log("Path:       ".blue + build.dir);
 }
 
-var cols = (process.stdout.getWindowSize()[0] || 70) - 2;
+var cols = (process.stdout.getWindowSize()[0] || 70) - 3;
 function progress (percent) {
   var num = Math.floor(cols * percent);
   var str = '[' +
     (new Array(num + 1).join('#')) +
-    (new Array((cols - num) + 1).join(' '));
-  process.stdout.write('\x1b[?25l' + str + ']\u000D');
+    (new Array((cols - num) + 1).join(' ')) + ']';
+  charm.write(str);
+  charm.left(str.length);
 }
 
 switch (args._[0]) {

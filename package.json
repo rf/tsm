@@ -27,5 +27,5 @@
    }
 ,  "license": "MIT"
 ,  "engine": { "node": ">=0.6" }
-,  "bin": { "tsm": "./exe/tsm" } 
+,  "bin": { "tsm": "./tsm" } 
 }

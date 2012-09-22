@@ -7,7 +7,10 @@ var tsm = require('./index');
 var prompt = require('prompt');
 require('d8/locale/en-US');
 var d8 = require('d8');
+var fs = require('fs');
 prompt.start();
+
+if (!fs.existsSync) fs.existsSync = path.existsSync;
 
 // Find the sdk path
 var home = process.env.HOME;
@@ -20,7 +23,7 @@ if (process.platform == 'darwin') {
   tries.push("/Library/Application Support/Titanium/mobilesdk");
   tries.push(home + "/Library/Application Support/Titanium/mobilesdk");
   tries.push(homePath);
-  defaultPath = tries.filter(path.existsSync)[0] || homePath;
+  defaultPath = tries.filter(fs.existsSync)[0] || homePath;
 }
 
 else if (process.platform == 'linux') {
@@ -28,7 +31,7 @@ else if (process.platform == 'linux') {
 }
 
 else if (process.platform == 'win32') {
-  defaultPath = "%APPDATA%\\Titanium\\mobilesdk";
+  defaultPath = process.env.APPDATA + "\\Titanium\\mobilesdk";
 }
 
 var rc = require('rc')('tsm', {
@@ -39,6 +42,16 @@ if (!rc.silent) console.log('Using SDK path: ' + rc.path);
 
 var os = process.platform == "darwin" ? "osx" : process.platform;
 var input, dir = path.join(rc.path, os), emitter;
+
+var tmppath = rc.path + path.sep + os
+if (!fs.existsSync(tmppath)) {
+  if (!rc.silent) console.log('SDK path does not exist, creating it');
+  tmppath.split(path.sep).reduce(function (memo, item) {
+    memo = memo + item + path.sep;
+    try { fs.mkdirSync(memo); }  catch (e) {}
+    return memo;
+  }, "");
+}
 
 function printBuilds (builds) {
   builds = builds.map(function (b) {

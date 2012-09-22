@@ -496,15 +496,15 @@ suite('list', function () {
 
 suite('unzip', function () {
   test('extracts', function (done) {
-    var zip = __dirname + "/fixtures/test.zip";
-    var output = __dirname + "/fixtures/2/";
-    var path = __dirname + "/fixtures/2/index.js";
+    var zip = path.join(__dirname, "fixtures", "test.zip");
+    var output = path.join(__dirname, "fixtures", "2");
+    var p = path.join(__dirname, "fixtures", "2", "index.js");
 
     tsm.unzip(zip, output, function (error) {
       if (error) done(error);
-      fs.exists(path, function (exists) {
+      fs.exists(p, function (exists) {
         if (!exists) done(new Error("file was not extracted properly"));
-        fs.unlink(path, done);
+        fs.unlink(p, done);
       });
     });
 

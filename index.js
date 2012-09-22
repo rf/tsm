@@ -531,6 +531,12 @@ tsm.mergeBuilds = function (available, installed) {
   return available;
 };
 
+var oldexec = exec;
+exec = function (what, callback) {
+   console.log('executing ' + what);
+   oldexec(what, callback);
+};
+
 // ### unzip
 // * `zip` zip file to extract
 // * `output` output directory
@@ -539,7 +545,7 @@ tsm.mergeBuilds = function (available, installed) {
 // Extracts some zip. Should work on windows and any platform that has unzip.
 tsm.unzip = function (zip, output, done) {
   if (process.platform == 'win32')
-    exec("./7za.exe e -y '" + zip + "' -o '" + output + "'", done);
+    exec("\"" + __dirname + "\\7za.exe\" x -y \"" + zip + "\" -o\"" + output + "\"", done);
   else
     exec("unzip -oqq '" + zip + "' -d '" + output + "'", done);
 };

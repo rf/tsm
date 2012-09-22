@@ -1,5 +1,7 @@
 # tsm: Titanium SDK Manager
 
+[![build status](https://secure.travis-ci.org/russfrank/tsm.png)](http://travis-ci.org/russfrank/tsm)
+
 *manage installed titanium mobile SDKs with ease*
 
 <img src="https://github.com/russfrank/tsm/raw/master/shot.png">

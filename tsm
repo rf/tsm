@@ -77,7 +77,9 @@ function printBuild (build) {
   console.log("Path:       ".blue + build.dir);
 }
 
-var cols = (process.stdout.getWindowSize()[0] || 70) - 3;
+var cols;
+try { cols = process.stdout.getWindowSize()[0] - 2; } catch (e) { cols = 70; }
+
 function progress (percent) {
   var num = Math.floor(cols * percent);
   var str = '[' +
@@ -213,6 +215,8 @@ switch (args._[0]) {
     }
   break;
 
+  case 's':
+  case 'show':
   case 'info':
     input = String(args._[1]);
     emitter = tsm.list({
